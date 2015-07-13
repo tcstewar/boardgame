@@ -28,15 +28,21 @@ class Villain(object):
     victory = 0
     def __init__(self, game):
         self.game = game
+        self.captured = []
+    def capture(self, card):
+        self.captured.append(card)
+    def __str__(self):
+        return '%s (%d)' % (self.name, self.power)
     def on_fight(self, player):
         pass
-    def on_escape(self, player):
+    def on_escape(self):
         pass
 
 class HydraKidnappers(Villain):
     power = 3
     victory = 1
     group = Hydra
+    name = 'HYDRA Kidnappers'
     def on_fight(self, player):
         choice = self.game.select("Gain a SHIELD Officer?", ["Yes", "No"])
         if choice == 'Yes':
@@ -46,6 +52,7 @@ class HydraArmies(Villain):
     power = 4
     victory = 3
     group = Hydra
+    name = 'Endless Armies of HYDRA'
     def on_fight(self, player):
         self.game.play_villain()
         self.game.play_villain()
@@ -54,6 +61,7 @@ class HydraViper(Villain):
     power = 5
     victory = 3
     group = Hydra
+    name = 'Viper'
     def on_fight(self, player):
         for p in self.game.players:
             for v in p.victory_pile:
@@ -61,12 +69,13 @@ class HydraViper(Villain):
                     break
             else:
                 p.gain_wound()
-    def on_escape(self, player):
-        self.on_fight(player)
+    def on_escape(self):
+        self.on_fight(None)
 
 class HydraSupreme(Villain):
     power = 6
     group = Hydra
+    name = 'Supreme HYDRA'
     @property
     def victory(self):
         for p in self.game.players:
@@ -85,6 +94,9 @@ class HydraSupreme(Villain):
 class Mastermind(object):
     def __init__(self, game):
         self.game = game
+        self.captured = []
+    def capture(self, card):
+        self.captured.append(card)
     def __str__(self):
         return '%s (%d)' % (self.name, self.power)
 
@@ -94,11 +106,14 @@ class RedSkull(Mastermind):
         super(RedSkull, self).__init__(game)
         self.power = 7
         self.always_leads = Hydra
-    def on_master_strike(self):
+    def strike(self):
         for p in self.game.players:
-            target = self.game.select("KO a Hero from hand",
-                                      self.game.get_heroes_in_hand())
-            game.trigger(KO, target=target)
+            actions = []
+            for c in p.hand:
+                if isinstance(c, Hero):
+                    actions.append(ActionKOFrom(self.game, c, p.hand))
+            if len(actions) > 0:
+                self.game.action_queue.append(boardgame.ActionSet(actions))
 
 class Scheme(object):
     def __init__(self, game, twists):
@@ -141,6 +156,47 @@ class Bystander(object):
     def __str__(self):
         return 'Bystander'
 
+
+class GameState(object):
+    def __init__(self, name):
+        self.name = name
+BeginTurn = GameState('Begin Turn')
+DuringTurn = GameState('During Turn')
+
+class ActionStartTurn(boardgame.Action):
+    name = 'Start turn'
+    def valid(self):
+        return self.game.state is BeginTurn
+    def perform(self):
+        self.game.play_villain()
+        self.game.state = DuringTurn
+
+class ActionEndTurn(boardgame.Action):
+    name = 'End turn'
+    def valid(self):
+        return self.game.state is DuringTurn
+    def perform(self):
+        self.game.state = BeginTurn
+        self.game.next_player()
+
+class ActionKOFrom(boardgame.Action):
+    def __str__(self):
+        return 'KO %s' % self.card
+    def __init__(self, game, card, location):
+        super(ActionKOFrom, self).__init__(game)
+        self.card = card
+        self.location = location
+    def valid(self):
+        return self.card in self.location
+    def perform(self):
+        self.game.ko.append(self.card)
+        self.location.remove(self.card)
+
+
+
+
+
+
 class Legendary(boardgame.BoardGame):
     def __init__(self, seed=None):
         super(Legendary, self).__init__(seed=seed)
@@ -149,11 +205,16 @@ class Legendary(boardgame.BoardGame):
         self.hero = []
         self.hq = [None, None, None, None, None]
         self.escaped = []
+        self.ko = []
         self.initialize()
+        self.state = BeginTurn
+        self.finished = False
+        self.actions = boardgame.ActionSet([ActionStartTurn(self),
+                                            ActionEndTurn(self)])
+        self.action_queue = []
 
     def initialize(self):
         self.players = [Player(self) for i in range(2)]
-        self.current_player = self.players[0]
         self.mastermind = RedSkull(self)
         self.scheme = UnleashCube(self)
         for i in range(5):
@@ -161,6 +222,7 @@ class Legendary(boardgame.BoardGame):
         self.villain.extend(Hydra(self).group)
         self.villain.extend(Hydra(self).group)
         self.villain.extend(Hydra(self).group)
+        self.villain.extend([Bystander(self) for i in range(2)])
         self.rng.shuffle(self.villain)
 
         self.hero.extend(IronMan(self).group)
@@ -182,6 +244,45 @@ class Legendary(boardgame.BoardGame):
         for i in range(count):
             self.villain.append(SchemeTwist(self))
 
+    def play_villain(self):
+        card = self.villain.pop(0)
+        if isinstance(card, Villain):
+            self.shift_city()
+            self.city[4] = card
+        elif isinstance(card, SchemeTwist):
+            self.scheme.twist()
+        elif isinstance(card, MasterStrike):
+            self.mastermind.strike()
+        elif isinstance(card, Bystander):
+            self.capture_bystander()
+        else:
+            raise Exception('could not handle %s' % card)
+
+    def shift_city(self):
+        index = 4
+        while self.city[index] is not None:
+            index -= 1
+            if index < 0:
+                self.escaped.append(self.city[0])
+                self.city[0].on_escape()
+                self.city[0] = None
+                index = 0
+        for i in range(index, 4):
+            self.city[i] = self.city[i + 1]
+        self.city[4] = None
+
+    def capture_bystander(self):
+        index = 4
+        while self.city[index] is None and index >= 0:
+            index -= 1
+        if index < 0:
+            v = self.mastermind
+        else:
+            v = self.city[index]
+        v.capture(Bystander(self))
+
+
+
 
     def text_state(self):
         lines = []
@@ -201,6 +302,9 @@ class Legendary(boardgame.BoardGame):
             hand = ', '.join(['%s' % x for x in p.hand])
             lines.append('P%d: %s' % (i+1, hand))
         return '\n'.join(lines)
+
+    def evil_wins(self):
+        self.finished = True
 
 
 class Hero(object):
@@ -295,6 +399,7 @@ class Player(object):
         self.hand = []
         self.discard = []
         self.played = []
+        self.victory_pile = []
         for i in range(8):
             self.gain(ShieldAgent(game))
         for i in range(4):
@@ -327,4 +432,7 @@ class Player(object):
 
 if __name__ == '__main__':
     game = Legendary(seed=1)
+    while not game.finished:
+        print game.text_state()
+        game.select_action()
     print game.text_state()
