@@ -1,0 +1,330 @@
+import boardgame
+
+class Group(object):
+    def __init__(self, game):
+        self.group = []
+        self.game = game
+        self.fill()
+    def add(self, card, count):
+        for i in range(count):
+            self.group.append(card(self.game))
+
+class VillainGroup(Group):
+    pass
+class HenchmenGroup(Group):
+    pass
+class HeroGroup(Group):
+    pass
+
+class Hydra(VillainGroup):
+    def fill(self):
+        self.add(HydraKidnappers, 3)
+        self.add(HydraArmies, 3)
+        self.add(HydraViper, 1)
+        self.add(HydraSupreme, 1)
+
+class Villain(object):
+    power = 0
+    victory = 0
+    def __init__(self, game):
+        self.game = game
+    def on_fight(self, player):
+        pass
+    def on_escape(self, player):
+        pass
+
+class HydraKidnappers(Villain):
+    power = 3
+    victory = 1
+    group = Hydra
+    def on_fight(self, player):
+        choice = self.game.select("Gain a SHIELD Officer?", ["Yes", "No"])
+        if choice == 'Yes':
+            player.gain(ShieldOfficer(self.game))
+
+class HydraArmies(Villain):
+    power = 4
+    victory = 3
+    group = Hydra
+    def on_fight(self, player):
+        self.game.play_villain()
+        self.game.play_villain()
+
+class HydraViper(Villain):
+    power = 5
+    victory = 3
+    group = Hydra
+    def on_fight(self, player):
+        for p in self.game.players:
+            for v in p.victory_pile:
+                if v.group is Hydra and v != self:
+                    break
+            else:
+                p.gain_wound()
+    def on_escape(self, player):
+        self.on_fight(player)
+
+class HydraSupreme(Villain):
+    power = 6
+    group = Hydra
+    @property
+    def victory(self):
+        for p in self.game.players:
+            if self in p.victory_pile:
+                pts = 0
+                for v in p.victory_pile:
+                    if v.group is Hydra:
+                        pts += 3
+                return pts
+        return 3
+
+
+
+
+
+class Mastermind(object):
+    def __init__(self, game):
+        self.game = game
+    def __str__(self):
+        return '%s (%d)' % (self.name, self.power)
+
+class RedSkull(Mastermind):
+    name = 'Red Skull'
+    def __init__(self, game):
+        super(RedSkull, self).__init__(game)
+        self.power = 7
+        self.always_leads = Hydra
+    def on_master_strike(self):
+        for p in self.game.players:
+            target = self.game.select("KO a Hero from hand",
+                                      self.game.get_heroes_in_hand())
+            game.trigger(KO, target=target)
+
+class Scheme(object):
+    def __init__(self, game, twists):
+        game.add_twists(twists)
+        self.game = game
+        self.twists_done = 0
+        self.twists_total = 8
+    def __str__(self):
+        return '%s (%d/%d)' % (self.name, self.twists_done, self.twists_total)
+
+class UnleashCube(Scheme):
+    name = 'Unleash the Power of the Cosmic Cube'
+    def __init__(self, game):
+        super(UnleashCube, self).__init__(game, twists=8)
+    def twist(self):
+        self.twists_done += 1
+        if 5 <= self.twists_done <= 6:
+            for p in self.game.players:
+                p.gain_wound()
+        elif self.twists_done == 7:
+            for p in self.game.players:
+                for i in range(3):
+                    p.gain_wound()
+        elif self.twists_done == 8:
+            self.game.evil_wins()
+
+class SchemeTwist(object):
+    def __init__(self, game):
+        self.game = game
+    def __str__(self):
+        return 'Scheme Twist'
+class MasterStrike(object):
+    def __init__(self, game):
+        self.game = game
+    def __str__(self):
+        return 'Master Strike'
+class Bystander(object):
+    def __init__(self, game):
+        self.game = game
+    def __str__(self):
+        return 'Bystander'
+
+class Legendary(boardgame.BoardGame):
+    def __init__(self, seed=None):
+        super(Legendary, self).__init__(seed=seed)
+        self.villain = []
+        self.city = [None, None, None, None, None]
+        self.hero = []
+        self.hq = [None, None, None, None, None]
+        self.escaped = []
+        self.initialize()
+
+    def initialize(self):
+        self.players = [Player(self) for i in range(2)]
+        self.current_player = self.players[0]
+        self.mastermind = RedSkull(self)
+        self.scheme = UnleashCube(self)
+        for i in range(5):
+            self.villain.append(MasterStrike(self))
+        self.villain.extend(Hydra(self).group)
+        self.villain.extend(Hydra(self).group)
+        self.villain.extend(Hydra(self).group)
+        self.rng.shuffle(self.villain)
+
+        self.hero.extend(IronMan(self).group)
+        self.hero.extend(IronMan(self).group)
+        self.hero.extend(IronMan(self).group)
+        self.hero.extend(IronMan(self).group)
+        self.hero.extend(IronMan(self).group)
+        self.rng.shuffle(self.hero)
+
+        self.fill_hq()
+
+    def fill_hq(self):
+        for i in range(5):
+            if self.hq[i] is None and len(self.hero) > 0:
+                self.hq[i] = self.hero.pop(0)
+
+
+    def add_twists(self, count):
+        for i in range(count):
+            self.villain.append(SchemeTwist(self))
+
+
+    def text_state(self):
+        lines = []
+        lines.append('Mastermind: %s' % self.mastermind)
+        lines.append('Scheme: %s' % self.scheme)
+        lines.append('Escaped: %d' % len(self.escaped))
+        lines.append('    Bridge: %s' % self.city[0])
+        lines.append('   Streets: %s' % self.city[1])
+        lines.append('  Rooftops: %s' % self.city[2])
+        lines.append('      Bank: %s' % self.city[3])
+        lines.append('    Sewers: %s' % self.city[4])
+        lines.append('Villain Pile: %d' % len(self.villain))
+        for i in range(5):
+            lines.append(' HQ %d (%d): %s' % (i + 1, self.hq[i].cost,
+                                               self.hq[i]))
+        for i, p in enumerate(self.players):
+            hand = ', '.join(['%s' % x for x in p.hand])
+            lines.append('P%d: %s' % (i+1, hand))
+        return '\n'.join(lines)
+
+
+class Hero(object):
+    group = None
+    power = 0
+    star = 0
+    cost = 0
+    tags = []
+    def __init__(self, game):
+        self.game = game
+    def __str__(self):
+        return '%s (%d/%d)' % (self.name, self.star, self.power)
+
+class ShieldAgent(Hero):
+    name = 'SHIELD Agent'
+    star = 1
+    def __init__(self, game):
+        super(ShieldAgent, self).__init__(game)
+class ShieldTrooper(Hero):
+    name = 'SHIELD Trooper'
+    power = 1
+    def __init__(self, game):
+        super(ShieldTrooper, self).__init__(game)
+
+class Tag(object):
+    def __init__(self, name):
+        self.name = name
+
+Tech = Tag('Tech')
+Avenger = Tag('Avenger')
+Ranged = Tag('Ranged')
+
+class IronMan(HeroGroup):
+    def fill(self):
+        self.add(IronManRepulsor, 5)
+        self.add(IronManQuantum, 1)
+        self.add(IronManEndless, 5)
+        self.add(IronManArc, 3)
+
+class IronManArc(Hero):
+    name = 'Iron Man: Arc Reactor'
+    cost = 5
+    tags = [Tech, Avenger]
+    @property
+    def power(self):
+        return 3 + self.game.current_player.count_played(tag=Tech)
+
+class IronManEndless(Hero):
+    name = 'Iron Man: Endless Intervention'
+    cost = 3
+    tags = [Tech, Avenger]
+    def on_play(self, player):
+        player.draw(1)
+        if player.count_played(tag=Tech, ignore=self) > 0:
+            player.draw(1)
+
+class IronManQuantum(Hero):
+    name = 'Iron Man: Quantum Breakthrough'
+    cost = 7
+    tags = [Tech, Avenger]
+    def on_play(self, player):
+        player.draw(2)
+        if player.count_played(tag=Tech, ignore=self) > 0:
+            player.draw(2)
+
+class IronManRepulsor(Hero):
+    name = 'Iron Man: Repulsor Rays'
+    cost = 3
+    tags = [Ranged, Avenger]
+    @property
+    def power(self):
+        if self.game.current_player.count_played(tag=Ranged, ignore=self) > 0:
+            return 3
+        else:
+            return 2
+
+
+class Wound(object):
+    def __init__(self, game):
+        self.game = game
+        self.power = 0
+        self.star = 0
+    def __str__(self):
+        return 'Wound'
+
+
+
+class Player(object):
+    def __init__(self, game):
+        self.game = game
+        self.stack = []
+        self.hand = []
+        self.discard = []
+        self.played = []
+        for i in range(8):
+            self.gain(ShieldAgent(game))
+        for i in range(4):
+            self.gain(ShieldTrooper(game))
+        self.draw(6)
+
+    def gain(self, card):
+        self.discard.append(card)
+
+    def gain_wound(self):
+        self.gain(Wound(self.game))
+
+    def draw(self, count):
+        for i in range(count):
+            if len(self.stack) == 0:
+                self.stack.extend(self.game.rng.permutation(self.discard))
+                del self.discard[:]
+            if len(self.stack) > 0:
+                self.hand.append(self.stack.pop(0))
+
+    def count_played(self, tag, ignore=None):
+        return len(self.get_played(tag=tag, ignore=ignore))
+    def get_played(self, tag, ignore=None):
+        return [c for c in self.played if tag in c.tags and c is not ignore]
+
+
+
+
+
+
+if __name__ == '__main__':
+    game = Legendary(seed=1)
+    print game.text_state()
