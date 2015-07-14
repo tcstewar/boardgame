@@ -176,8 +176,46 @@ class ActionEndTurn(boardgame.Action):
     def valid(self):
         return self.game.state is DuringTurn
     def perform(self):
+        self.game.current_player.available_star = 0
+        self.game.current_player.available_power = 0
+        self.game.current_player.discard_hand()
+        self.game.current_player.discard_played()
+        self.game.current_player.draw_new_hand()
         self.game.state = BeginTurn
         self.game.next_player()
+
+
+class ActionPlayFromHand(boardgame.Action):
+    name = 'Play Hero from hand'
+    def valid(self):
+        if self.game.state is DuringTurn:
+            cards = [h for h in self.game.current_player.hand
+                       if isinstance(h, Hero)]
+            return len(cards) > 0
+        return False
+    def perform(self):
+        actions = []
+        for h in self.game.current_player.hand:
+            if isinstance(h, Hero):
+                actions.append(ActionPlay(self.game, h))
+        self.game.action_queue.append(boardgame.ActionSet(actions))
+
+class ActionRecruit(boardgame.Action):
+    name = 'Recruit Hero'
+    def valid(self):
+        if self.game.state is DuringTurn:
+            cards = [h for h in self.game.hq
+                       if h.cost <= self.game.current_player.available_star]
+            return len(cards) > 0
+        return False
+    def perform(self):
+        actions = []
+        for h in self.game.hq:
+            if h.cost <= self.game.current_player.available_star:
+                actions.append(ActionRecruitHero(self.game, h))
+        self.game.action_queue.append(boardgame.ActionSet(actions))
+
+
 
 class ActionKOFrom(boardgame.Action):
     def __str__(self):
@@ -192,8 +230,38 @@ class ActionKOFrom(boardgame.Action):
         self.game.ko.append(self.card)
         self.location.remove(self.card)
 
+class ActionPlay(boardgame.Action):
+    def __str__(self):
+        return 'Play %s' % self.card
+    def __init__(self, game, card):
+        super(ActionPlay, self).__init__(game)
+        self.card = card
+    def valid(self):
+        return self.card in self.game.current_player.hand
+    def perform(self):
+        self.game.current_player.played.append(self.card)
+        self.game.current_player.hand.remove(self.card)
+        self.game.current_player.available_power += self.card.power
+        self.game.current_player.available_star += self.card.star
 
-
+class ActionRecruitHero(boardgame.Action):
+    def __str__(self):
+        return 'Recruit %s' % self.card
+    def __init__(self, game, card):
+        super(ActionRecruitHero, self).__init__(game)
+        self.card = card
+    def valid(self):
+        if self.card not in self.game.hq:
+            return False
+        if self.card.cost > self.game.current_player.available_star:
+            return False
+        return True
+    def perform(self):
+        self.game.current_player.gain(self.card)
+        self.game.current_player.available_star -= self.card.cost
+        index = self.game.hq.index(self.card)
+        self.game.hq[index] = None
+        self.game.fill_hq()
 
 
 
@@ -210,7 +278,10 @@ class Legendary(boardgame.BoardGame):
         self.state = BeginTurn
         self.finished = False
         self.actions = boardgame.ActionSet([ActionStartTurn(self),
-                                            ActionEndTurn(self)])
+                                            ActionPlayFromHand(self),
+                                            ActionRecruit(self),
+                                            ActionEndTurn(self),
+                                            ])
         self.action_queue = []
 
     def initialize(self):
@@ -300,7 +371,11 @@ class Legendary(boardgame.BoardGame):
                                                self.hq[i]))
         for i, p in enumerate(self.players):
             hand = ', '.join(['%s' % x for x in p.hand])
-            lines.append('P%d: %s' % (i+1, hand))
+            lines.append('  P%d: %s' % (i+1, hand))
+
+        lines.append('Current Player %d: (%d/%d)' % (self.player_index+1,
+                                        self.current_player.available_star,
+                                        self.current_player.available_power))
         return '\n'.join(lines)
 
     def evil_wins(self):
@@ -400,10 +475,27 @@ class Player(object):
         self.discard = []
         self.played = []
         self.victory_pile = []
+        self.available_power = 0
+        self.available_star = 0
         for i in range(8):
             self.gain(ShieldAgent(game))
         for i in range(4):
             self.gain(ShieldTrooper(game))
+        self.draw_new_hand()
+
+    def discard(self, card):
+        self.hand.remove(card)
+        self.discard.append(card)
+
+    def discard_hand(self):
+        for c in self.hand:
+            self.discard(c)
+
+    def discard_played(self):
+        self.discard.extend(self.played)
+        del self.played[:]
+
+    def draw_new_hand(self):
         self.draw(6)
 
     def gain(self, card):

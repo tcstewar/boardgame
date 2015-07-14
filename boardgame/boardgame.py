@@ -4,7 +4,7 @@ class Action(object):
     def __init__(self, game):
         self.game = game
     def valid(self):
-        raise NotImplementedError
+        return True
     def __str__(self):
         return self.name
 
