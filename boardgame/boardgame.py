@@ -9,8 +9,10 @@ class Action(object):
         return self.name
 
 class ActionSet(object):
-    def __init__(self, actions):
+    def __init__(self, actions, repeat=False, allow_same_type=True):
         self.actions = actions
+        self.repeat = repeat
+        self.allow_same_type = allow_same_type
     def select(self):
         acts = [a for a in self.actions if a.valid()]
         for i, a in enumerate(acts):
@@ -21,7 +23,18 @@ class ActionSet(object):
         except:
             print 'Invalid choice'
             select()
+            return
         act.perform()
+        if self.repeat:
+            acts = []
+            for a in self.actions:
+                if a.valid():
+                    if (self.allow_same_type or
+                        a.__class__ is not act.__class__):
+                            acts.append(a)
+            if len(acts) > 0:
+                self.actions = acts
+                acts[0].game.action_queue.insert(0, self)
 
 
 class BoardGame(object):
