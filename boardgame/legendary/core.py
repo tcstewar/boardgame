@@ -467,14 +467,18 @@ class Legendary(boardgame.BoardGame):
     def play_villain(self):
         card = self.villain.pop(0)
         if isinstance(card, Villain):
+            self.event('A new Villain enters the city: %s' % card)
             self.shift_city()
             self.city[4] = card
         elif isinstance(card, SchemeTwist):
+            self.event('Scheme Twist!')
             self.scheme.twist()
         elif isinstance(card, MasterStrike):
+            self.event('%s makes a master strike' % self.mastermind)
             self.mastermind.strike()
         elif isinstance(card, Bystander):
-            self.capture_bystander()
+            card = self.capture_bystander()
+            self.event('%s captures a Bystander' % card)
         else:
             raise Exception('could not handle %s' % card)
 
@@ -500,6 +504,7 @@ class Legendary(boardgame.BoardGame):
         else:
             v = self.city[index]
         v.capture(Bystander(self))
+        return v
 
 
 
@@ -526,7 +531,9 @@ class Legendary(boardgame.BoardGame):
         lines.append('----------------------------------------')
         for i, p in enumerate(self.players):
             if p is self.current_player:
-                lines.append('Player %d (current)' % (i+1))
+                lines.append('Player %d (current) [S%d P%d]' % (i+1,
+                                                      p.available_star,
+                                                      p.available_power))
                 for x in p.hand:
                     lines.append('  %s' % x)
                 for i in range(10-len(p.hand)):
@@ -534,12 +541,14 @@ class Legendary(boardgame.BoardGame):
             else:
                 hand = ', '.join(['%s' % x for x in p.hand])
                 lines.append('Player %d: %s' % (i+1, hand))
-
-        lines.append('Current Player %d: (%d/%d)' % (self.player_index+1,
-                                        self.current_player.available_star,
-                                        self.current_player.available_power))
-
         lines.append('----------------------------------------')
+        for event in self.recent_events:
+            lines.append(event)
+        for i in range(4-len(self.recent_events)):
+            lines.append('................')
+        self.events.extend(self.recent_events)
+        del self.recent_events[:]
+
         return '\n'.join(lines)
 
     def evil_wins(self):
