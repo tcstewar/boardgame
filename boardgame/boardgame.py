@@ -17,6 +17,8 @@ class ActionSet(object):
         acts = [a for a in self.actions if a.valid()]
         for i, a in enumerate(acts):
             print '%d: %s' % (i + 1, a)
+        for i in range(15 - len(acts)):
+            print '----------------'
         s = raw_input('Choose: ')
         try:
             act = acts[int(s) - 1]
@@ -39,6 +41,7 @@ class ActionSet(object):
 
 class BoardGame(object):
     def __init__(self, seed=None):
+        self.seed = seed
         self.rng = np.random.RandomState(seed=seed)
         self.player_index = 0
 

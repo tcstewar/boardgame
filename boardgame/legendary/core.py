@@ -506,6 +506,11 @@ class Legendary(boardgame.BoardGame):
 
     def text_state(self):
         lines = []
+        for i in range(10):
+            print '.................'
+
+        lines.append('LEGENDARY  (Game seed=%d)' % self.seed)
+        lines.append('----------------------------------------')
         lines.append('Mastermind: %s' % self.mastermind)
         lines.append('Scheme: %s' % self.scheme)
         lines.append('Escaped: %d' % len(self.escaped))
@@ -518,13 +523,23 @@ class Legendary(boardgame.BoardGame):
         for i in range(5):
             lines.append(' HQ %d (%d): %s' % (i + 1, self.hq[i].cost,
                                                self.hq[i]))
+        lines.append('----------------------------------------')
         for i, p in enumerate(self.players):
-            hand = ', '.join(['%s' % x for x in p.hand])
-            lines.append('  P%d: %s' % (i+1, hand))
+            if p is self.current_player:
+                lines.append('Player %d (current)' % (i+1))
+                for x in p.hand:
+                    lines.append('  %s' % x)
+                for i in range(10-len(p.hand)):
+                    lines.append('  ----------------')
+            else:
+                hand = ', '.join(['%s' % x for x in p.hand])
+                lines.append('Player %d: %s' % (i+1, hand))
 
         lines.append('Current Player %d: (%d/%d)' % (self.player_index+1,
                                         self.current_player.available_star,
                                         self.current_player.available_power))
+
+        lines.append('----------------------------------------')
         return '\n'.join(lines)
 
     def evil_wins(self):
