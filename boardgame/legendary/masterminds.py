@@ -20,7 +20,7 @@ class RedSkull(Mastermind):
                 if isinstance(c, Hero):
                     actions.append(action.KOFrom(self.game, c, p.hand))
             if len(actions) > 0:
-                self.game.action_queue.append(bg.ActionSet(actions))
+                self.game.choice(actions)
 
 class RedSkullTactic1(Tactic):
     victory = 5
@@ -32,7 +32,7 @@ class RedSkullTactic2(Tactic):
     def on_fight(self, player):
         player.draw(2)
         for c in player.victory_pile:
-            if c.group is Hydra:
+            if c.group is villains.Hydra:
                 player.draw(1)
 
 class RedSkullTactic3(Tactic):
@@ -51,6 +51,4 @@ class RedSkullTactic4(Tactic):
         for act in [action.KOFrom, action.DiscardFrom, action.ReturnFrom]:
             for card in cards:
                 actions.append(act(self.game, card, cards))
-        self.game.action_queue.append(bg.ActionSet(actions,
-                                                    repeat=True,
-                                                    allow_same_type=False))
+        self.game.choice(actions, repeat=True, allow_same_type=False)

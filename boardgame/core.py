@@ -26,18 +26,20 @@ class ActionSet(object):
             print 'Invalid choice'
             self.select()
             return
-        act.perform()
+
         if self.repeat:
-            acts = []
+            if not self.allow_same_type:
+                acts = []
+                for a in self.actions:
+                    if a.__class__ is not act.__class__:
+                        acts.append(a)
+                self.actions = acts
             for a in self.actions:
                 if a.valid():
-                    if (self.allow_same_type or
-                        a.__class__ is not act.__class__):
-                            acts.append(a)
-            if len(acts) > 0:
-                self.actions = acts
-                acts[0].game.action_queue.insert(0, self)
+                    a.game.action_queue.insert(0, self)
+                    break
 
+        act.perform()
 
 class BoardGame(object):
     def __init__(self, seed=None):
@@ -46,6 +48,7 @@ class BoardGame(object):
         self.player_index = 0
         self.events = []
         self.recent_events = []
+        self.action_queue = []
 
     def event(self, text):
         self.recent_events.append(text)
@@ -60,8 +63,9 @@ class BoardGame(object):
     def text_state(self):
         raise NotImplementedError
 
+    def choice(self, actions, **kwargs):
+        self.action_queue.insert(0, ActionSet(actions, **kwargs))
+
     def select_action(self):
-        if len(self.action_queue) > 0:
-            self.action_queue.pop(0).select()
-        else:
-            self.actions.select()
+        print 'action queue size', len(self.action_queue)
+        self.action_queue.pop(0).select()

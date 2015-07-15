@@ -22,13 +22,13 @@ class Legendary(bg.BoardGame):
         self.initialize()
         self.state = BeginTurn
         self.finished = False
-        self.actions = bg.ActionSet([action.StartTurn(self),
-                                     action.PlayFromHand(self),
-                                     action.Recruit(self),
-                                     action.Fight(self),
-                                     action.EndTurn(self),
-                                     ])
-        self.action_queue = []
+        self.choice([action.StartTurn(self),
+                     action.PlayFromHand(self),
+                     action.Recruit(self),
+                     action.Fight(self),
+                     action.EndTurn(self),
+                    ],
+                    repeat=True)
 
     def initialize(self):
         self.players = [Player(self) for i in range(2)]

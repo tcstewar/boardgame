@@ -16,8 +16,8 @@ class EndTurn(bg.Action):
     def valid(self):
         return self.game.state is DuringTurn
     def perform(self):
-        self.game.current_player.available_star = 0
-        self.game.current_player.available_power = 0
+        self.game.current_player.available_star = 10
+        self.game.current_player.available_power = 10
         self.game.current_player.discard_hand()
         self.game.current_player.discard_played()
         self.game.current_player.draw_new_hand()
@@ -38,7 +38,7 @@ class PlayFromHand(bg.Action):
         for h in self.game.current_player.hand:
             if isinstance(h, Hero):
                 actions.append(Play(self.game, h))
-        self.game.action_queue.append(bg.ActionSet(actions))
+        self.game.choice(actions)
 
 class Recruit(bg.Action):
     name = 'Recruit Hero'
@@ -59,7 +59,7 @@ class Recruit(bg.Action):
             actions.append(RecruitHero(self.game,
                                              heroes.ShieldOfficer(self.game)))
 
-        self.game.action_queue.append(bg.ActionSet(actions))
+        self.game.choice(actions)
 
 
 class Fight(bg.Action):
@@ -84,7 +84,7 @@ class Fight(bg.Action):
             if (h is not None and
                     h.power <= self.game.current_player.available_power):
                 actions.append(FightVillain(self.game, h))
-        self.game.action_queue.append(bg.ActionSet(actions))
+        self.game.choice(actions)
 
 
 class KOFrom(bg.Action):

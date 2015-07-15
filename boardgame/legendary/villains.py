@@ -17,9 +17,10 @@ class HydraKidnappers(Villain):
     group = Hydra
     name = 'HYDRA Kidnappers'
     def on_fight(self, player):
+        print 'hydra onfight'
         actions = [action.GainCard(self.game, heroes.ShieldOfficer(self.game)),
                    action.DoNothing(self.game)]
-        self.game.action_queue.append(bg.ActionSet(actions))
+        self.game.choice(actions)
 
 class HydraArmies(Villain):
     power = 4
