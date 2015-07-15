@@ -45,8 +45,10 @@ class Recruit(bg.Action):
     def valid(self):
         if self.game.state is not DuringTurn:
             return False
-        if self.game.current_player.available_star >= heroes.ShieldOfficer.cost:
-            return True
+        if (len(self.game.officers) > 0 and
+            self.game.current_player.available_star >=
+                  self.game.officers[0].cost):
+                    return True
         cards = [h for h in self.game.hq
                    if h.cost <= self.game.current_player.available_star]
         return len(cards) > 0
@@ -55,9 +57,11 @@ class Recruit(bg.Action):
         for h in self.game.hq:
             if h.cost <= self.game.current_player.available_star:
                 actions.append(RecruitHero(self.game, h))
-        if self.game.current_player.available_star >= heroes.ShieldOfficer.cost:
+        if (len(self.game.officers) > 0 and
+            self.game.current_player.available_star >=
+                  self.game.officers[0].cost):
             actions.append(RecruitHero(self.game,
-                                             heroes.ShieldOfficer(self.game)))
+                                       self.game.officers[0]))
 
         self.game.choice(actions)
 
@@ -127,6 +131,19 @@ class DiscardFrom(bg.Action):
         self.game.current_player.discard.append(self.card)
         self.location.remove(self.card)
 
+class GainFrom(bg.Action):
+    def __str__(self):
+        return 'Gain %s' % self.card
+    def __init__(self, game, card, location):
+        super(GainFrom, self).__init__(game)
+        self.card = card
+        self.location = location
+    def valid(self):
+        return self.card in self.location
+    def perform(self):
+        self.game.current_player.discard.append(self.card)
+        self.location.remove(self.card)
+
 class ReturnFrom(bg.Action):
     def __str__(self):
         return 'Return %s' % self.card
@@ -163,7 +180,7 @@ class RecruitHero(bg.Action):
         self.card = card
     def valid(self):
         if (self.card not in self.game.hq and
-            not isinstance(self.card, heroes.ShieldOfficer)):
+            self.card not in self.game.officers):
                 return False
         if self.card.cost > self.game.current_player.available_star:
             return False
@@ -171,7 +188,9 @@ class RecruitHero(bg.Action):
     def perform(self):
         self.game.current_player.gain(self.card)
         self.game.current_player.available_star -= self.card.cost
-        if not isinstance(self.card, heroes.ShieldOfficer):
+        if isinstance(self.card, heroes.ShieldOfficer):
+            self.game.officers.remove(self.card)
+        else:
             index = self.game.hq.index(self.card)
             self.game.hq[index] = None
             self.game.fill_hq()

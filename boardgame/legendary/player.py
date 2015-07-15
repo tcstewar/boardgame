@@ -1,7 +1,6 @@
 import boardgame as bg
 
 from . import heroes
-from .core import Wound
 
 class Player(object):
     def __init__(self, game):
@@ -34,7 +33,8 @@ class Player(object):
         self.discard.append(card)
 
     def gain_wound(self):
-        self.gain(Wound(self.game))
+        if len(self.game.wounds) > 0:
+            self.gain(self.game.wounds.pop(0))
 
     def draw(self, count):
         for i in range(count):

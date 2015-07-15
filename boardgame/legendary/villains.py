@@ -2,7 +2,6 @@ import boardgame as bg
 
 from .core import Villain, VillainGroup
 from . import action
-from . import heroes
 
 class Hydra(VillainGroup):
     def fill(self):
@@ -17,8 +16,12 @@ class HydraKidnappers(Villain):
     group = Hydra
     name = 'HYDRA Kidnappers'
     def on_fight(self, player):
-        actions = [action.GainCard(self.game, heroes.ShieldOfficer(self.game)),
-                   action.DoNothing(self.game)]
+        if len(self.game.officers) > 0:
+            actions = [action.GainFrom(self.game,
+                                       self.game.officers[0],
+                                       self.game.officers
+                                       ),
+                       action.DoNothing(self.game)]
         self.game.choice(actions)
 
 class HydraArmies(Villain):

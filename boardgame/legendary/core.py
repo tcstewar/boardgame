@@ -23,6 +23,8 @@ class Villain(object):
         pass
     def on_escape(self):
         pass
+    def on_ambush(self):
+        pass
 
 class VillainGroup(Group):
     pass

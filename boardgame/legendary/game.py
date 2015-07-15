@@ -19,6 +19,10 @@ class Legendary(bg.BoardGame):
         self.hq = [None, None, None, None, None]
         self.escaped = []
         self.ko = []
+        self.wounds = [Wound(self) for i in range(30)]
+        self.bystanders = [Bystander(self) for i in range(30)]
+        self.officers = [heroes.ShieldOfficer(self) for i in range(30)]
+
         self.initialize()
         self.state = BeginTurn
         self.choice([action.StartTurn(self),
@@ -38,7 +42,8 @@ class Legendary(bg.BoardGame):
         self.villain.extend(villains.Hydra(self).group)
         self.villain.extend(villains.Hydra(self).group)
         self.villain.extend(villains.Hydra(self).group)
-        self.villain.extend([Bystander(self) for i in range(2)])
+        for i in range(2):
+            self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
 
         self.hero.extend(heroes.IronMan(self).group)
@@ -72,6 +77,7 @@ class Legendary(bg.BoardGame):
             self.event('A new Villain enters the city: %s' % card)
             self.shift_city()
             self.city[4] = card
+            card.on_ambush()
         elif isinstance(card, SchemeTwist):
             self.event('Scheme Twist!')
             self.scheme.twist()
@@ -99,6 +105,8 @@ class Legendary(bg.BoardGame):
         self.city[4] = None
 
     def capture_bystander(self):
+        if len(self.bystanders) == 0:
+            return
         index = 4
         while self.city[index] is None and index >= 0:
             index -= 1
@@ -106,7 +114,7 @@ class Legendary(bg.BoardGame):
             v = self.mastermind
         else:
             v = self.city[index]
-        v.capture(Bystander(self))
+        v.capture(self.bystanders.pop(0))
         return v
 
     def on_escape(self, card):
