@@ -25,12 +25,12 @@ class Legendary(bg.BoardGame):
 
         self.initialize()
         self.state = BeginTurn
-        self.choice([action.StartTurn(self),
-                     action.PlayAll(self),
-                     action.PlayFromHand(self),
-                     action.Recruit(self),
-                     action.Fight(self),
-                     action.EndTurn(self),
+        self.choice([action.StartTurn(),
+                     action.PlayAll(),
+                     action.PlayFromHand(),
+                     action.Recruit(),
+                     action.Fight(),
+                     action.EndTurn(),
                     ],
                     repeat=True)
 
@@ -127,14 +127,14 @@ class Legendary(bg.BoardGame):
         actions = []
         for c in self.hq:
             if c is not None and c.cost <= 6:
-                actions.append(action.KOFromHQ(self, c))
+                actions.append(action.KOFromHQ(c))
         self.choice(actions)
 
         if len(card.captured) > 0:
             for p in self.players:
                 actions = []
                 for c in p.hand:
-                    actions.append(action.DiscardFrom(self, c, p.hand))
+                    actions.append(action.DiscardFrom(c, p.hand))
                 self.choice(actions)
 
 

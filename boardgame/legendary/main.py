@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     def selector(game, actions):
         print game.text_state()
-        action = actions.text_choice()
-        actions.select(action)
+        action = actions.text_choice(game)
+        actions.select(game, action)
     game.run(selector)
     print game.text_state()

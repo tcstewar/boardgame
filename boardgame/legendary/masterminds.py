@@ -18,7 +18,7 @@ class RedSkull(Mastermind):
             actions = []
             for c in p.hand:
                 if isinstance(c, Hero):
-                    actions.append(action.KOFrom(self.game, c, p.hand))
+                    actions.append(action.KOFrom(c, p.hand))
             if len(actions) > 0:
                 self.game.choice(actions)
 
@@ -50,5 +50,5 @@ class RedSkullTactic4(Tactic):
         actions = []
         for act in [action.KOFrom, action.DiscardFrom, action.ReturnFrom]:
             for card in cards:
-                actions.append(act(self.game, card, cards))
+                actions.append(act(card, cards))
         self.game.choice(actions, repeat=True, allow_same_type=False)

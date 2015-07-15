@@ -17,11 +17,10 @@ class HydraKidnappers(Villain):
     name = 'HYDRA Kidnappers'
     def on_fight(self, player):
         if len(self.game.officers) > 0:
-            actions = [action.GainFrom(self.game,
-                                       self.game.officers[0],
+            actions = [action.GainFrom(self.game.officers[0],
                                        self.game.officers
                                        ),
-                       action.DoNothing(self.game)]
+                       action.DoNothing()]
         self.game.choice(actions)
 
 class HydraArmies(Villain):

@@ -1,9 +1,7 @@
 import numpy as np
 
 class Action(object):
-    def __init__(self, game):
-        self.game = game
-    def valid(self):
+    def valid(self, game, player):
         return True
     def __str__(self):
         return self.name
@@ -14,11 +12,11 @@ class ActionSet(object):
         self.repeat = repeat
         self.allow_same_type = allow_same_type
 
-    def get_valid_actions(self):
-        return [a for a in self.actions if a.valid()]
+    def get_valid_actions(self, game):
+        return [a for a in self.actions if a.valid(game, game.current_player)]
 
-    def text_choice(self):
-        actions = self.get_valid_actions()
+    def text_choice(self, game):
+        actions = self.get_valid_actions(game)
         while True:
             for i, a in enumerate(actions):
                 print '%d: %s' % (i + 1, a)
@@ -30,8 +28,8 @@ class ActionSet(object):
             except:
                 print 'Invalid choice'
 
-    def select(self, action):
-        acts = self.get_valid_actions()
+    def select(self, game, action):
+        acts = self.get_valid_actions(game)
         assert action in acts
 
         if self.repeat:
@@ -42,11 +40,11 @@ class ActionSet(object):
                         acts.append(a)
                 self.actions = acts
             for a in self.actions:
-                if a.valid():
-                    a.game.action_queue.insert(0, self)
+                if a.valid(game, game.current_player):
+                    game.action_queue.insert(0, self)
                     break
 
-        action.perform()
+        action.perform(game, player=game.current_player)
 
 class BoardGame(object):
     def __init__(self, seed=None):
@@ -82,7 +80,7 @@ class BoardGame(object):
     def run(self, selector):
         while not self.finished:
             actions = self.action_queue.pop(0)
-            valid = actions.get_valid_actions()
+            valid = actions.get_valid_actions(self)
             if len(valid) > 0:
                 selector(self, actions)
 

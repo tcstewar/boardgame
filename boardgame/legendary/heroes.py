@@ -94,7 +94,7 @@ class SpiderManAmazing(Hero):
                 self.game.event('Spider-Man draws %s' % c)
                 player.hand.append(c)
             else:
-                actions.append(action.ReturnFrom(self.game, c, cards))
+                actions.append(action.ReturnFrom(c, cards))
         if len(actions) <= 1:
             for a in actions:
                 player.stack.insert(0, a.card)
