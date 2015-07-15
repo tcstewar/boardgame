@@ -7,15 +7,18 @@ from .tags import *
 class ShieldAgent(Hero):
     name = 'SHIELD Agent'
     star = 1
+    tags = [Shield]
 
 class ShieldTrooper(Hero):
     name = 'SHIELD Trooper'
     power = 1
+    tags = [Shield]
 
 class ShieldOfficer(Hero):
     name = 'SHIELD Officer'
     star = 2
     cost = 3
+    tags = [Shield]
 
 class IronMan(HeroGroup):
     def fill(self):
@@ -28,14 +31,17 @@ class IronManArc(Hero):
     name = 'Iron Man: Arc Reactor'
     cost = 5
     tags = [Tech, Avenger]
-    @property
-    def power(self):
-        return 3 + self.game.current_player.count_played(tag=Tech)
+    power = 3
+    extra_power = True
+    desc = 'P+1 per other <Tec> played'
+    def on_play(self, player):
+        player.available_power += player.count_played(tag=Tech)
 
 class IronManEndless(Hero):
     name = 'Iron Man: Endless Intervention'
     cost = 3
     tags = [Tech, Avenger]
+    desc = 'Draw a card. <Tec>: Draw another card'
     def on_play(self, player):
         player.draw(1)
         if player.count_played(tag=Tech, ignore=self) > 0:
@@ -45,6 +51,7 @@ class IronManQuantum(Hero):
     name = 'Iron Man: Quantum Breakthrough'
     cost = 7
     tags = [Tech, Avenger]
+    desc = 'Draw two cards. <Tec>: Draw two more cards'
     def on_play(self, player):
         player.draw(2)
         if player.count_played(tag=Tech, ignore=self) > 0:
@@ -54,12 +61,12 @@ class IronManRepulsor(Hero):
     name = 'Iron Man: Repulsor Rays'
     cost = 3
     tags = [Ranged, Avenger]
-    @property
-    def power(self):
-        if self.game.current_player.count_played(tag=Ranged, ignore=self) > 0:
-            return 3
-        else:
-            return 2
+    power = 2
+    extra_power = True
+    desc = '<Rng>: P+1'
+    def on_play(self, player):
+        if player.count_played(tag=Ranged, ignore=self) > 0:
+            player.available_power += 1
 
 class SpiderMan(HeroGroup):
     def fill(self):
@@ -73,6 +80,7 @@ class SpiderManStrength(Hero):
     cost = 2
     star = 1
     tags = [Spider, Strength]
+    desc = 'Reveal top card. If C<=2, draw it.'
     def on_play(self, player):
         cards = player.reveal(1)
         for c in cards:
@@ -86,6 +94,7 @@ class SpiderManAmazing(Hero):
     name = 'Spider-Man: The Amazing Spider-Man'
     cost = 2
     tags = [Spider, Covert]
+    desc = 'Reveal top 3 cards. Draw any with C<=2. Return others in any order.'
     def on_play(self, player):
         cards = player.reveal(3)
         actions = []
@@ -106,6 +115,7 @@ class SpiderManResponsibility(Hero):
     cost = 2
     power = 1
     tags = [Spider, Instinct]
+    desc = 'Reveal top card. If C<=2, draw it.'
     def on_play(self, player):
         cards = player.reveal(1)
         for c in cards:
@@ -120,6 +130,7 @@ class SpiderManWeb(Hero):
     name = 'Spider-Man: Web Shooters'
     cost = 2
     tags = [Spider, Tech]
+    desc = 'Rescue Bystander. Reveal top card. If C<=2, draw it.'
     def on_play(self, player):
         player.rescue_bystander()
         cards = player.reveal(1)

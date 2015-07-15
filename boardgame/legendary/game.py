@@ -146,31 +146,37 @@ class Legendary(bg.BoardGame):
         lines.append('Mastermind: %s' % self.mastermind)
         lines.append('Scheme: %s' % self.scheme)
         lines.append('Escaped: %d' % len(self.escaped))
-        lines.append('    Bridge: %s' % self.city[0])
-        lines.append('   Streets: %s' % self.city[1])
-        lines.append('  Rooftops: %s' % self.city[2])
-        lines.append('      Bank: %s' % self.city[3])
-        lines.append('    Sewers: %s' % self.city[4])
+        def text(x):
+            return x.text() if x is not None else '-----'
+        lines.append('    Bridge: %s' % text(self.city[0]))
+        lines.append('   Streets: %s' % text(self.city[1]))
+        lines.append('  Rooftops: %s' % text(self.city[2]))
+        lines.append('      Bank: %s' % text(self.city[3]))
+        lines.append('    Sewers: %s' % text(self.city[4]))
         lines.append('Villain Pile: %d' % len(self.villain))
         for i in range(5):
             if self.hq[i] is None:
                 lines.append('  HQ %d: None' % (i + 1))
             else:
                 lines.append(' HQ %d (%d): %s' % (i + 1, self.hq[i].cost,
-                                                  self.hq[i]))
+                                                  self.hq[i].text()))
+        lines.append('Hero Pile: %d' % len(self.hero))
         lines.append('----------------------------------------')
         for i, p in enumerate(self.players):
             if p is self.current_player:
-                lines.append('Player %d (current) [S%d P%d]' % (i+1,
+                lines.append('Player %d (current) [S%d P%d V%d]' % (i+1,
                                                       p.available_star,
-                                                      p.available_power))
+                                                      p.available_power,
+                                                      p.victory_points()))
                 for x in p.hand:
-                    lines.append('  %s' % x)
+                    lines.append('  %s' % x.text())
                 for i in range(10-len(p.hand)):
                     lines.append('  ----------------')
             else:
                 hand = ', '.join(['%s' % x for x in p.hand])
-                lines.append('Player %d: %s' % (i+1, hand))
+                lines.append('Player %d [V%d]: %s' % (i+1,
+                                                      p.victory_points(),
+                                                      hand))
         lines.append('----------------------------------------')
         for event in self.recent_events:
             lines.append(event)

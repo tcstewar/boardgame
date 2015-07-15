@@ -58,6 +58,13 @@ class Player(object):
     def get_played(self, tag, ignore=None):
         return [c for c in self.played if tag in c.tags and c is not ignore]
 
+    def victory_points(self):
+        total = 0
+        for c in self.victory_pile:
+            total += c.victory
+            if c.extra_victory:
+                total += c.extra_victory(self)
+        return total
 
     def play_from_hand(self, card):
         self.available_power += card.power

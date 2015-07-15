@@ -12,6 +12,7 @@ class Group(object):
 class Villain(object):
     power = 0
     victory = 0
+    extra_victory = None
     def __init__(self, game):
         self.game = game
         self.captured = []
@@ -25,6 +26,14 @@ class Villain(object):
         pass
     def on_ambush(self):
         pass
+    def text(self):
+        name = '%40s' % self.name
+        group = self.group.name
+        ev = '+' if self.extra_victory else ''
+        return '%s <%s> [V%d%s] %s' % (name, group,
+                                        self.victory, ev,
+                                        self.desc)
+
 
 class VillainGroup(Group):
     pass
@@ -84,15 +93,34 @@ class Hero(bg.Card):
     power = 0
     star = 0
     cost = 0
+    extra_power = False
+    extra_star = False
     tags = []
+    desc = ''
+
+    def text(self):
+        name = '%40s' % self.name
+        ep = '+' if self.extra_power else ''
+        es = '+' if self.extra_star else ''
+        tags = [t.short_name for t in self.tags]
+        tags = ' <%s>' % ','.join(tags) if len(tags) > 0 else ' '
+        return '%s%s [S%d%s P%d%s] %s' % (name,
+                                        tags,
+                                        self.star, es,
+                                        self.power, ep,
+                                        self.desc)
+
     def __str__(self):
-        return '%s (%d/%d)' % (self.name, self.star, self.power)
+        ep = '+' if self.extra_power else ''
+        es = '+' if self.extra_star else ''
+        return '[S%d%s P%d%s] %s' % (self.star, es, self.power, ep, self.name)
     def on_play(self, player):
         pass
 
 class Tag(object):
-    def __init__(self, name):
+    def __init__(self, name, short_name):
         self.name = name
+        self.short_name = short_name
 
 class Wound(bg.Card):
     power = 0
