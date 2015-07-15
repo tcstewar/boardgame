@@ -63,6 +63,8 @@ class MasterStrike(bg.Card):
     def __str__(self):
         return 'Master Strike'
 class Bystander(bg.Card):
+    victory = 1
+    group = None
     def __str__(self):
         return 'Bystander'
 
@@ -73,8 +75,6 @@ class GameState(object):
 
 BeginTurn = GameState('Begin Turn')
 DuringTurn = GameState('During Turn')
-GoodWon = GameState('Good Won')
-EvilWon = GameState('Evil Won')
 
 
 class Hero(bg.Card):

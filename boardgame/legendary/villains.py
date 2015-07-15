@@ -17,7 +17,6 @@ class HydraKidnappers(Villain):
     group = Hydra
     name = 'HYDRA Kidnappers'
     def on_fight(self, player):
-        print 'hydra onfight'
         actions = [action.GainCard(self.game, heroes.ShieldOfficer(self.game)),
                    action.DoNothing(self.game)]
         self.game.choice(actions)

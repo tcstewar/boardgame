@@ -53,6 +53,9 @@ class Legendary(bg.BoardGame):
     def fill_hq(self):
         for i in range(5):
             if self.hq[i] is None and len(self.hero) > 0:
+                if len(self.hero) == 0:
+                    self.tie_game()
+                    return
                 self.hq[i] = self.hero.pop(0)
 
 
@@ -61,6 +64,9 @@ class Legendary(bg.BoardGame):
             self.villain.append(SchemeTwist(self))
 
     def play_villain(self):
+        if len(self.villain) == 0:
+            self.tie_game()
+            return
         card = self.villain.pop(0)
         if isinstance(card, Villain):
             self.event('A new Villain enters the city: %s' % card)
@@ -84,6 +90,7 @@ class Legendary(bg.BoardGame):
             index -= 1
             if index < 0:
                 self.escaped.append(self.city[0])
+                self.on_escape(self.city[0])
                 self.city[0].on_escape()
                 self.city[0] = None
                 index = 0
@@ -102,13 +109,28 @@ class Legendary(bg.BoardGame):
         v.capture(Bystander(self))
         return v
 
+    def on_escape(self, card):
+        actions = []
+        for c in self.hq:
+            if c.cost <= 6:
+                actions.append(action.KOFromHQ(self, c))
+        self.choice(actions)
+
+        if len(card.captured) > 0:
+            for p in self.players:
+                actions = []
+                for c in p.hand:
+                    actions.append(action.DiscardFrom(self, c, p.hand))
+                self.choice(actions)
+
+
 
 
 
     def text_state(self):
         lines = []
         for i in range(10):
-            print '.................'
+            lines.append('.................')
 
         lines.append('LEGENDARY  (Game seed=%d)' % self.seed)
         lines.append('----------------------------------------')
@@ -148,8 +170,11 @@ class Legendary(bg.BoardGame):
         return '\n'.join(lines)
 
     def evil_wins(self):
-        self.state = EvilWon
+        print 'evil wins'
         self.finished = True
     def good_wins(self):
-        self.state = GoodWon
+        print 'good wins'
+        self.finished = True
+    def tie_game(self):
+        print 'tie game'
         self.finished = True

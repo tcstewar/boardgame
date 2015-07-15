@@ -16,8 +16,8 @@ class EndTurn(bg.Action):
     def valid(self):
         return self.game.state is DuringTurn
     def perform(self):
-        self.game.current_player.available_star = 10
-        self.game.current_player.available_power = 10
+        self.game.current_player.available_star = 0
+        self.game.current_player.available_power = 0
         self.game.current_player.discard_hand()
         self.game.current_player.discard_played()
         self.game.current_player.draw_new_hand()
@@ -99,6 +99,20 @@ class KOFrom(bg.Action):
     def perform(self):
         self.game.ko.append(self.card)
         self.location.remove(self.card)
+
+class KOFromHQ(bg.Action):
+    def __str__(self):
+        return 'KO %s from HQ' % self.card
+    def __init__(self, game, card):
+        super(KOFromHQ, self).__init__(game)
+        self.card = card
+    def valid(self):
+        return self.card in self.game.hq
+    def perform(self):
+        index = self.game.hq.index(self.card)
+        self.game.ko.append(self.card)
+        self.game.hq[index] = None
+        self.game.fill_hq()
 
 class DiscardFrom(bg.Action):
     def __str__(self):
@@ -191,9 +205,12 @@ class FightVillain(bg.Action):
     def perform(self):
         self.game.current_player.available_power -= self.card.power
         self.card.on_fight(self.game.current_player)
-        index = self.game.city.index(self.card)
-        self.game.city[index] = None
+        if self.card in self.game.city:
+            index = self.game.city.index(self.card)
+            self.game.city[index] = None
         self.game.current_player.victory_pile.append(self.card)
+        self.game.current_player.victory_pile.extend(self.card.captured)
+        del self.card.captured[:]
 
 class FightMastermind(bg.Action):
     def __str__(self):
@@ -208,5 +225,7 @@ class FightMastermind(bg.Action):
         tactic = self.game.mastermind.tactics.pop(0)
         tactic.on_fight(self.game.current_player)
         self.game.current_player.victory_pile.append(tactic)
+        self.game.current_player.victory_pile.extend(self.game.mastermind.captured)
+        del self.game.mastermind.captured[:]
         if len(self.game.mastermind.tactics) == 0:
             self.game.good_wins()

@@ -1,6 +1,7 @@
 import boardgame as bg
 
 from . import heroes
+from .core import Wound
 
 class Player(object):
     def __init__(self, game):

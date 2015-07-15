@@ -13,25 +13,32 @@ class ActionSet(object):
         self.actions = actions
         self.repeat = repeat
         self.allow_same_type = allow_same_type
-    def select(self):
-        acts = [a for a in self.actions if a.valid()]
-        for i, a in enumerate(acts):
-            print '%d: %s' % (i + 1, a)
-        for i in range(15 - len(acts)):
-            print '----------------'
-        s = raw_input('Choose: ')
-        try:
-            act = acts[int(s) - 1]
-        except:
-            print 'Invalid choice'
-            self.select()
-            return
+
+    def get_valid_actions(self):
+        return [a for a in self.actions if a.valid()]
+
+    def text_choice(self):
+        actions = self.get_valid_actions()
+        while True:
+            for i, a in enumerate(actions):
+                print '%d: %s' % (i + 1, a)
+            for i in range(15 - len(actions)):
+                print '----------------'
+            s = raw_input('Choose: ')
+            try:
+                return actions[int(s) - 1]
+            except:
+                print 'Invalid choice'
+
+    def select(self, action):
+        acts = self.get_valid_actions()
+        assert action in acts
 
         if self.repeat:
             if not self.allow_same_type:
                 acts = []
                 for a in self.actions:
-                    if a.__class__ is not act.__class__:
+                    if a.__class__ is not action.__class__:
                         acts.append(a)
                 self.actions = acts
             for a in self.actions:
@@ -39,7 +46,7 @@ class ActionSet(object):
                     a.game.action_queue.insert(0, self)
                     break
 
-        act.perform()
+        action.perform()
 
 class BoardGame(object):
     def __init__(self, seed=None):
@@ -66,8 +73,16 @@ class BoardGame(object):
         raise NotImplementedError
 
     def choice(self, actions, **kwargs):
-        self.action_queue.insert(0, ActionSet(actions, **kwargs))
+        if len(actions) > 0:
+            self.action_queue.insert(0, ActionSet(actions, **kwargs))
 
     def select_action(self):
-        print 'action queue size', len(self.action_queue)
         self.action_queue.pop(0).select()
+
+    def run(self, selector):
+        while not self.finished:
+            actions = self.action_queue.pop(0)
+            valid = actions.get_valid_actions()
+            if len(valid) > 0:
+                selector(self, actions)
+
