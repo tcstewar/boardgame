@@ -24,7 +24,7 @@ class ActionSet(object):
             act = acts[int(s) - 1]
         except:
             print 'Invalid choice'
-            select()
+            self.select()
             return
         act.perform()
         if self.repeat:
@@ -65,7 +65,3 @@ class BoardGame(object):
             self.action_queue.pop(0).select()
         else:
             self.actions.select()
-
-
-
-
