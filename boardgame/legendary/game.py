@@ -28,6 +28,7 @@ class Legendary(bg.BoardGame):
         self.choice([action.StartTurn(),
                      action.PlayAll(),
                      action.PlayFromHand(),
+                     action.Heal(),
                      action.Recruit(),
                      action.Fight(),
                      action.EndTurn(),

@@ -41,7 +41,7 @@ class HydraViper(Villain):
     group = Hydra
     name = 'Viper'
     desc = ('Fight: Each player without other HYDRA in Victory Pile gains'
-            'Wound. Escape: Same effect')
+            ' Wound. Escape: Same effect')
     def on_fight(self, player):
         for p in self.game.players:
             for v in p.victory_pile:

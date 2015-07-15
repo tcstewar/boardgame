@@ -17,12 +17,30 @@ class EndTurn(bg.Action):
     def perform(self, game, player):
         player.available_star = 0
         player.available_power = 0
+        player.has_fought = False
+        player.has_recruited = False
         player.discard_hand()
         player.discard_played()
         player.draw_new_hand()
         game.state = BeginTurn
         game.next_player()
 
+class Heal(bg.Action):
+    name = 'Heal Wounds'
+    def valid(self, game, player):
+        if player.has_fought or player.has_recruited:
+            return False
+        for card in player.hand:
+            if isinstance(card, Wound):
+                return True
+        return False
+    def perform(self, game, player):
+        wounds = [card for card in player.hand if isinstance(card, Wound)]
+        for w in wounds:
+            player.hand.remove(w)
+            game.event('Player healed a Wound')
+            game.ko.append(w)
+        player.has_healed = True
 
 class PlayFromHand(bg.Action):
     name = 'Play Hero from hand'
@@ -55,6 +73,8 @@ class PlayAll(bg.Action):
 class Recruit(bg.Action):
     name = 'Recruit Hero'
     def valid(self, game, player):
+        if player.has_healed:
+            return False
         if game.state is not DuringTurn:
             return False
         if (len(game.officers) > 0 and
@@ -82,6 +102,8 @@ class Recruit(bg.Action):
 class Fight(bg.Action):
     name = 'Fight'
     def valid(self, game, player):
+        if player.has_healed:
+            return False
         if game.state is not DuringTurn:
             return False
         if (player.available_power >= game.mastermind.power):
@@ -188,6 +210,7 @@ class RecruitHero(bg.Action):
             return False
         return True
     def perform(self, game, player):
+        player.has_recruited = True
         player.gain(self.card)
         player.available_star -= self.card.cost
         if self.card in game.hq:
@@ -220,6 +243,7 @@ class FightVillain(bg.Action):
     def valid(self, game, player):
         return player.available_power >= self.card.power
     def perform(self, game, player):
+        player.has_fought = True
         player.available_power -= self.card.power
         self.card.on_fight(player)
         if self.card in game.city:
@@ -237,6 +261,7 @@ class FightMastermind(bg.Action):
     def valid(self, game, player):
         return player.available_power >= self.card.power
     def perform(self, game, player):
+        player.has_fought = True
         player.available_power -= self.card.power
         tactic = self.card.tactics.pop(0)
         tactic.on_fight(player)

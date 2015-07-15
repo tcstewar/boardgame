@@ -12,6 +12,9 @@ class Player(object):
         self.victory_pile = []
         self.available_power = 0
         self.available_star = 0
+        self.has_fought = False
+        self.has_recruited = False
+        self.has_healed = False
         for i in range(8):
             self.gain(hero.ShieldAgent(game))
         for i in range(4):
