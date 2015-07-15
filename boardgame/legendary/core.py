@@ -54,6 +54,8 @@ class Mastermind(bg.Card):
         self.captured = []
     def capture(self, card):
         self.captured.append(card)
+    def text(self):
+        return '%s [P%d] %s' % (self.name, self.power, self.desc)
     def __str__(self):
         return '%s (%d)' % (self.name, self.power)
 

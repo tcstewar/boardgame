@@ -6,6 +6,7 @@ from . import action
 
 class RedSkull(Mastermind):
     name = 'Red Skull'
+    desc = 'Master Strike: Each player KOs a Hero from their hand.'
     def __init__(self, game):
         super(RedSkull, self).__init__(game)
         self.power = 7
@@ -23,11 +24,15 @@ class RedSkull(Mastermind):
                 self.game.choice(actions)
 
 class RedSkullTactic1(Tactic):
+    name = 'Endless Resources'
+    desc = 'S+4'
     victory = 5
     def on_fight(self, player):
         player.available_star += 4
 
 class RedSkullTactic2(Tactic):
+    name = 'HYDRA Conspiracy'
+    desc = 'Draw 2 cards. Draw another per HYDRA Villain in Victory Pile'
     victory = 5
     def on_fight(self, player):
         player.draw(2)
@@ -36,11 +41,15 @@ class RedSkullTactic2(Tactic):
                 player.draw(1)
 
 class RedSkullTactic3(Tactic):
+    name = 'Negablast Grenades'
+    desc = 'P+3'
     victory = 5
     def on_fight(self, player):
         player.available_power += 3
 
 class RedSkullTactic4(Tactic):
+    name = 'Ruthless Dictator'
+    desc = 'Reveal top 3 cards. KO one, discard one, return one.'
     victory = 5
     def on_fight(self, player):
         index = len(player.hand)
