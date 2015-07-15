@@ -46,9 +46,11 @@ class BoardGame(object):
         self.seed = seed
         self.rng = np.random.RandomState(seed=seed)
         self.player_index = 0
+        self.finished = False
         self.events = []
         self.recent_events = []
         self.action_queue = []
+        self.players = []
 
     def event(self, text):
         self.recent_events.append(text)

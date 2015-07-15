@@ -21,7 +21,6 @@ class Legendary(bg.BoardGame):
         self.ko = []
         self.initialize()
         self.state = BeginTurn
-        self.finished = False
         self.choice([action.StartTurn(self),
                      action.PlayFromHand(self),
                      action.Recruit(self),
@@ -149,13 +148,8 @@ class Legendary(bg.BoardGame):
         return '\n'.join(lines)
 
     def evil_wins(self):
+        self.state = EvilWon
         self.finished = True
     def good_wins(self):
+        self.state = GoodWon
         self.finished = True
-
-if __name__ == '__main__':
-    game = Legendary(seed=1)
-    while not game.finished:
-        print game.text_state()
-        game.select_action()
-    print game.text_state()

@@ -52,7 +52,7 @@ class Scheme(bg.Card):
         super(Scheme, self).__init__(game)
         game.add_twists(twists)
         self.twists_done = 0
-        self.twists_total = 8
+        self.twists_total = twists
     def __str__(self):
         return '%s (%d/%d)' % (self.name, self.twists_done, self.twists_total)
 
@@ -70,8 +70,11 @@ class Bystander(bg.Card):
 class GameState(object):
     def __init__(self, name):
         self.name = name
+
 BeginTurn = GameState('Begin Turn')
 DuringTurn = GameState('During Turn')
+GoodWon = GameState('Good Won')
+EvilWon = GameState('Evil Won')
 
 
 class Hero(bg.Card):
