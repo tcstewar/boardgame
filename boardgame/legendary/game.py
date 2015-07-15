@@ -26,6 +26,7 @@ class Legendary(bg.BoardGame):
         self.initialize()
         self.state = BeginTurn
         self.choice([action.StartTurn(self),
+                     action.PlayAll(self),
                      action.PlayFromHand(self),
                      action.Recruit(self),
                      action.Fight(self),
@@ -46,11 +47,16 @@ class Legendary(bg.BoardGame):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
 
-        self.hero.extend(heroes.IronMan(self).group)
-        self.hero.extend(heroes.IronMan(self).group)
-        self.hero.extend(heroes.IronMan(self).group)
-        self.hero.extend(heroes.IronMan(self).group)
-        self.hero.extend(heroes.IronMan(self).group)
+        self.hero.extend(heroes.SpiderMan(self).group)
+        self.hero.extend(heroes.SpiderMan(self).group)
+        self.hero.extend(heroes.SpiderMan(self).group)
+        self.hero.extend(heroes.SpiderMan(self).group)
+        self.hero.extend(heroes.SpiderMan(self).group)
+        #self.hero.extend(heroes.IronMan(self).group)
+        #self.hero.extend(heroes.IronMan(self).group)
+        #self.hero.extend(heroes.IronMan(self).group)
+        #self.hero.extend(heroes.IronMan(self).group)
+        #self.hero.extend(heroes.IronMan(self).group)
         self.rng.shuffle(self.hero)
 
         self.fill_hq()
@@ -120,7 +126,7 @@ class Legendary(bg.BoardGame):
     def on_escape(self, card):
         actions = []
         for c in self.hq:
-            if c.cost <= 6:
+            if c is not None and c.cost <= 6:
                 actions.append(action.KOFromHQ(self, c))
         self.choice(actions)
 
@@ -152,8 +158,11 @@ class Legendary(bg.BoardGame):
         lines.append('    Sewers: %s' % self.city[4])
         lines.append('Villain Pile: %d' % len(self.villain))
         for i in range(5):
-            lines.append(' HQ %d (%d): %s' % (i + 1, self.hq[i].cost,
-                                               self.hq[i]))
+            if self.hq[i] is None:
+                lines.append('  HQ %d: None' % (i + 1))
+            else:
+                lines.append(' HQ %d (%d): %s' % (i + 1, self.hq[i].cost,
+                                                  self.hq[i]))
         lines.append('----------------------------------------')
         for i, p in enumerate(self.players):
             if p is self.current_player:

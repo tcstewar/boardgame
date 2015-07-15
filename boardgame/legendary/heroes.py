@@ -1,5 +1,6 @@
 import boardgame as bg
 
+import action
 from .core import Hero, HeroGroup
 from .tags import *
 
@@ -59,3 +60,73 @@ class IronManRepulsor(Hero):
             return 3
         else:
             return 2
+
+class SpiderMan(HeroGroup):
+    def fill(self):
+        self.add(SpiderManStrength, 5)
+        self.add(SpiderManAmazing, 1)
+        self.add(SpiderManResponsibility, 5)
+        self.add(SpiderManWeb, 3)
+
+class SpiderManStrength(Hero):
+    name = 'Spider-Man: Astonishing Strength'
+    cost = 2
+    star = 1
+    tags = [Spider, Strength]
+    def on_play(self, player):
+        cards = player.reveal(1)
+        for c in cards:
+            if c.cost <= 2:
+                self.game.event('Spider-Man draws %s' % c)
+                player.hand.append(c)
+            else:
+                player.stack.insert(0, c)
+
+class SpiderManAmazing(Hero):
+    name = 'Spider-Man: The Amazing Spider-Man'
+    cost = 2
+    tags = [Spider, Covert]
+    def on_play(self, player):
+        cards = player.reveal(3)
+        actions = []
+        for c in cards:
+            if c.cost <= 2:
+                self.game.event('Spider-Man draws %s' % c)
+                player.hand.append(c)
+            else:
+                actions.append(action.ReturnFrom(self.game, c, cards))
+        if len(actions) <= 1:
+            for a in actions:
+                player.stack.insert(0, a.card)
+        else:
+            self.game.choice(actions)
+
+class SpiderManResponsibility(Hero):
+    name = 'Spider-Man: Great Responsibility'
+    cost = 2
+    power = 1
+    tags = [Spider, Instinct]
+    def on_play(self, player):
+        cards = player.reveal(1)
+        for c in cards:
+            if c.cost <= 2:
+                self.game.event('Spider-Man draws %s' % c)
+                player.hand.append(c)
+            else:
+                player.stack.insert(0, c)
+
+
+class SpiderManWeb(Hero):
+    name = 'Spider-Man: Web Shooters'
+    cost = 2
+    tags = [Spider, Tech]
+    def on_play(self, player):
+        player.rescue_bystander()
+        cards = player.reveal(1)
+        for c in cards:
+            if c.cost <= 2:
+                self.game.event('Spider-Man draws %s' % c)
+                player.hand.append(c)
+            else:
+                player.stack.insert(0, c)
+

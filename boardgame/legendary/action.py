@@ -40,6 +40,20 @@ class PlayFromHand(bg.Action):
                 actions.append(Play(self.game, h))
         self.game.choice(actions)
 
+class PlayAll(bg.Action):
+    name = 'Play all Heroes'
+    def valid(self):
+        if self.game.state is DuringTurn:
+            cards = [h for h in self.game.current_player.hand
+                       if isinstance(h, Hero)]
+            return len(cards) > 0
+        return False
+    def perform(self):
+        player = self.game.current_player
+        for h in player.hand[:]:
+            if isinstance(h, Hero):
+                player.play_from_hand(h)
+
 class Recruit(bg.Action):
     name = 'Recruit Hero'
     def valid(self):
@@ -49,13 +63,16 @@ class Recruit(bg.Action):
             self.game.current_player.available_star >=
                   self.game.officers[0].cost):
                     return True
-        cards = [h for h in self.game.hq
-                   if h.cost <= self.game.current_player.available_star]
-        return len(cards) > 0
+        for h in self.game.hq:
+            if h is not None:
+                if h.cost <= self.game.current_player.available_star:
+                    return True
+        return False
     def perform(self):
         actions = []
         for h in self.game.hq:
-            if h.cost <= self.game.current_player.available_star:
+            if (h is not None and
+                    h.cost <= self.game.current_player.available_star):
                 actions.append(RecruitHero(self.game, h))
         if (len(self.game.officers) > 0 and
             self.game.current_player.available_star >=
@@ -166,11 +183,8 @@ class Play(bg.Action):
     def valid(self):
         return self.card in self.game.current_player.hand
     def perform(self):
-        self.game.current_player.available_power += self.card.power
-        self.game.current_player.available_star += self.card.star
-        self.card.on_play(self.game.current_player)
-        self.game.current_player.played.append(self.card)
-        self.game.current_player.hand.remove(self.card)
+        self.game.current_player.play_from_hand(self.card)
+
 
 class RecruitHero(bg.Action):
     def __str__(self):

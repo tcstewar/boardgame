@@ -36,6 +36,15 @@ class Player(object):
         if len(self.game.wounds) > 0:
             self.gain(self.game.wounds.pop(0))
 
+    def reveal(self, count):
+        index = len(self.hand)
+        self.draw(count)
+        cards = self.hand[index:]
+        del self.hand[index:]
+        for c in cards:
+            self.game.event('Reveal %s' % c)
+        return cards
+
     def draw(self, count):
         for i in range(count):
             if len(self.stack) == 0:
@@ -48,6 +57,19 @@ class Player(object):
         return len(self.get_played(tag=tag, ignore=ignore))
     def get_played(self, tag, ignore=None):
         return [c for c in self.played if tag in c.tags and c is not ignore]
+
+
+    def play_from_hand(self, card):
+        self.available_power += card.power
+        self.available_star += card.star
+        card.on_play(self)
+        self.played.append(card)
+        self.hand.remove(card)
+
+    def rescue_bystander(self):
+        if len(self.game.bystanders) > 0:
+            self.victory_pile.append(self.game.bystanders.pop())
+            self.game.event('Rescued Bystander')
 
 
 

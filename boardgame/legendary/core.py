@@ -97,6 +97,7 @@ class Tag(object):
 class Wound(bg.Card):
     power = 0
     star = 0
+    cost = 0
     def __str__(self):
         return 'Wound'
 
