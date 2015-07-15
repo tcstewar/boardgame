@@ -1,7 +1,6 @@
 import boardgame as bg
 
 from .core import *
-from . import heroes
 
 class StartTurn(bg.Action):
     name = 'Start turn'
@@ -191,12 +190,12 @@ class RecruitHero(bg.Action):
     def perform(self, game, player):
         player.gain(self.card)
         player.available_star -= self.card.cost
-        if isinstance(self.card, heroes.ShieldOfficer):
-            game.officers.remove(self.card)
-        else:
+        if self.card in game.hq:
             index = game.hq.index(self.card)
             game.hq[index] = None
             game.fill_hq()
+        else:
+            game.officers.remove(self.card)
 
 class GainCard(bg.Action):
     def __str__(self):

@@ -1,6 +1,6 @@
 import boardgame as bg
 
-from . import heroes
+from . import hero
 
 class Player(object):
     def __init__(self, game):
@@ -13,9 +13,9 @@ class Player(object):
         self.available_power = 0
         self.available_star = 0
         for i in range(8):
-            self.gain(heroes.ShieldAgent(game))
+            self.gain(hero.ShieldAgent(game))
         for i in range(4):
-            self.gain(heroes.ShieldTrooper(game))
+            self.gain(hero.ShieldTrooper(game))
         self.draw_new_hand()
 
     def discard_hand(self):

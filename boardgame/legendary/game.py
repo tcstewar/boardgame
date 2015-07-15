@@ -3,7 +3,7 @@ import boardgame as bg
 import villains
 import masterminds
 import schemes
-from . import heroes
+from . import hero
 from . import action
 from .player import Player
 
@@ -21,7 +21,7 @@ class Legendary(bg.BoardGame):
         self.ko = []
         self.wounds = [Wound(self) for i in range(30)]
         self.bystanders = [Bystander(self) for i in range(30)]
-        self.officers = [heroes.ShieldOfficer(self) for i in range(30)]
+        self.officers = [hero.ShieldOfficer(self) for i in range(30)]
 
         self.initialize()
         self.state = BeginTurn
@@ -47,16 +47,11 @@ class Legendary(bg.BoardGame):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
 
-        self.hero.extend(heroes.SpiderMan(self).group)
-        self.hero.extend(heroes.SpiderMan(self).group)
-        self.hero.extend(heroes.SpiderMan(self).group)
-        self.hero.extend(heroes.SpiderMan(self).group)
-        self.hero.extend(heroes.SpiderMan(self).group)
-        #self.hero.extend(heroes.IronMan(self).group)
-        #self.hero.extend(heroes.IronMan(self).group)
-        #self.hero.extend(heroes.IronMan(self).group)
-        #self.hero.extend(heroes.IronMan(self).group)
-        #self.hero.extend(heroes.IronMan(self).group)
+        self.hero.extend(hero.SpiderMan(self).group)
+        self.hero.extend(hero.SpiderMan(self).group)
+        self.hero.extend(hero.IronMan(self).group)
+        self.hero.extend(hero.IronMan(self).group)
+        self.hero.extend(hero.IronMan(self).group)
         self.rng.shuffle(self.hero)
 
         self.fill_hq()
