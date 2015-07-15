@@ -49,10 +49,8 @@ class Legendary(bg.BoardGame):
         self.rng.shuffle(self.villain)
 
         self.hero.extend(hero.SpiderMan(self).group)
-        self.hero.extend(hero.SpiderMan(self).group)
         self.hero.extend(hero.IronMan(self).group)
-        self.hero.extend(hero.IronMan(self).group)
-        self.hero.extend(hero.IronMan(self).group)
+        self.hero.extend(hero.Wolverine(self).group)
         self.rng.shuffle(self.hero)
 
         self.fill_hq()

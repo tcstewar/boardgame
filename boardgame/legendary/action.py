@@ -22,6 +22,7 @@ class EndTurn(bg.Action):
         player.discard_hand()
         player.discard_played()
         player.draw_new_hand()
+        player.extra_draw_count = 0
         game.state = BeginTurn
         game.next_player()
 

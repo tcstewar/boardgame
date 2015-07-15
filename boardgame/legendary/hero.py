@@ -141,3 +141,58 @@ class SpiderManWeb(Hero):
             else:
                 player.stack.insert(0, c)
 
+class Wolverine(HeroGroup):
+    def fill(self):
+        self.add(WolverineAmbush, 5)
+        self.add(WolverineAnimal, 5)
+        self.add(WolverineReckless, 1)
+        self.add(WolverineNoMercy, 3)
+
+class WolverineAmbush(Hero):
+    name = 'Wolverine: Sudden Ambush'
+    cost = 4
+    tags = [XMen, Covert]
+    desc = 'If you drew any extra cards this turn, P+2'
+    extra_power = True
+    def on_play(self, player):
+        if player.extra_draw_count > 0:
+            player.available_power += 2
+
+class WolverineAnimal(Hero):
+    name = 'Wolverine: Animal Instincts'
+    cost = 2
+    tags = [XMen, Instinct]
+    desc = 'Draw a card. <Ins>: P+2'
+    extra_power = True
+    def on_play(self, player):
+        player.draw(1)
+        if player.count_played(tag=Instinct, ignore=self) > 0:
+            player.available_power += 2
+
+class WolverineReckless(Hero):
+    name = 'Wolverine: Reckless Abandon'
+    cost = 7
+    tags = [XMen, Covert]
+    power = 3
+    desc = 'Count how many extra cards you have drawn. Draw that many cards.'
+    def on_play(self, player):
+        count = player.extra_draw_count
+        player.draw(count)
+
+class WolverineNoMercy(Hero):
+    name = 'Wolverine: No Mercy'
+    cost = 4
+    tags = [XMen, Strength]
+    desc = 'Draw a card. You may KO a card from your hand or discard pile.'
+    def on_play(self, player):
+        player.draw(1)
+        actions = []
+        for c in player.hand:
+            actions.append(action.KOFrom(c, player.hand))
+        for c in player.discard:
+            actions.append(action.KOFrom(c, player.discard))
+        actions.append(action.DoNothing())
+        self.game.choice(actions)
+
+
+

@@ -15,6 +15,7 @@ class Player(object):
         self.has_fought = False
         self.has_recruited = False
         self.has_healed = False
+        self.extra_draw_count = 0
         for i in range(8):
             self.gain(hero.ShieldAgent(game))
         for i in range(4):
@@ -54,6 +55,7 @@ class Player(object):
                 self.stack.extend(self.game.rng.permutation(self.discard))
                 del self.discard[:]
             if len(self.stack) > 0:
+                self.extra_draw_count += 1
                 self.hand.append(self.stack.pop(0))
 
     def count_played(self, tag, ignore=None):
