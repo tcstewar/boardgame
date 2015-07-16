@@ -48,8 +48,12 @@ class PlayFromHand(bg.Action):
     name = 'Play Hero from hand'
     def valid(self, game, player):
         if game.state is DuringTurn:
-            cards = [h for h in player.hand
-                       if isinstance(h, Hero)]
+            cards = []
+            for h in player.hand:
+                if isinstance(h, Hero):
+                    if hasattr(h, 'valid_play') and not h.valid_play(player):
+                        continue
+                    cards.append(h)
             return len(cards) > 0
         return False
     def perform(self, game, player):
@@ -64,12 +68,12 @@ class PlayAll(bg.Action):
     def valid(self, game, player):
         if game.state is DuringTurn:
             cards = [h for h in player.hand
-                       if isinstance(h, Hero)]
+                       if isinstance(h, Hero) and not hasattr(h, 'valid_play')]
             return len(cards) > 0
         return False
     def perform(self, game, player):
         for h in player.hand[:]:
-            if isinstance(h, Hero):
+            if isinstance(h, Hero) and not hasattr(h, 'valid_play'):
                 player.play_from_hand(h)
 
 class Recruit(bg.Action):
@@ -129,7 +133,7 @@ class Fight(bg.Action):
 
 class KOFrom(bg.Action):
     def __str__(self):
-        return 'KO %s' % self.card
+        return 'KO: %s' % self.card.text()
     def __init__(self, card, location):
         self.card = card
         self.location = location
@@ -141,7 +145,7 @@ class KOFrom(bg.Action):
 
 class KOFromHQ(bg.Action):
     def __str__(self):
-        return 'KO %s from HQ' % self.card
+        return 'KO from HQ: %s' % self.card.text()
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
@@ -161,8 +165,12 @@ class DiscardFrom(bg.Action):
     def valid(self, game, player):
         return self.card in self.location
     def perform(self, game, player):
-        player.discard.append(self.card)
-        self.location.remove(self.card)
+        if self.card.return_from_discard:
+            #TODO: make this an option
+            game.event('%s returned to hand' % self.card)
+        else:
+            player.discard.append(self.card)
+            self.location.remove(self.card)
 
 class GainFrom(bg.Action):
     def __str__(self):
@@ -194,6 +202,9 @@ class Play(bg.Action):
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
+        if hasattr(self.card, 'valid_play'):
+            if not self.card.valid_play(player):
+                return False
         return self.card in player.hand
     def perform(self, game, player):
         player.play_from_hand(self.card)
@@ -201,7 +212,7 @@ class Play(bg.Action):
 
 class RecruitHero(bg.Action):
     def __str__(self):
-        return '[C%d] Recruit %s' % (self.card.cost, self.card)
+        return '[C%d] Recruit %s' % (self.card.cost, self.card.text())
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
@@ -266,6 +277,7 @@ class FightMastermind(bg.Action):
         player.has_fought = True
         player.available_power -= self.card.power
         tactic = self.card.tactics.pop(0)
+        game.event('Mastermind Tactic: %s' % tactic.text())
         tactic.on_fight(player)
         player.victory_pile.append(tactic)
         player.victory_pile.extend(self.card.captured)

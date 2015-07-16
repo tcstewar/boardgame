@@ -268,3 +268,78 @@ class HawkeyeTrick(Hero):
         player.handlers[player.on_fight].append(on_fight)
 
 
+class Cyclops(HeroGroup):
+    def fill(self):
+        self.add(CyclopsDetermination, 5)
+        self.add(CyclopsOptic, 5)
+        self.add(CyclopsEnergy, 3)
+        self.add(CyclopsUnited, 1)
+
+class CyclopsDetermination(Hero):
+    name = 'Cyclops: Determination'
+    cost = 2
+    star = 3
+    tags = [XMen, Strength]
+    desc = 'To play this card, you must discard a card.'
+    def valid_play(self, player):
+        for h in player.hand:
+            if h is not self:
+                return True
+        return False
+    def on_play(self, player):
+        actions = []
+        for h in player.hand:
+            if h is not self:
+                actions.append(action.DiscardFrom(h, player.hand))
+        #TODO: ensure at least one of these actions is chosen!
+        self.game.choice(actions)
+
+class CyclopsOptic(Hero):
+    name = 'Cyclops: Optic Blast'
+    cost = 3
+    power = 3
+    tags = [XMen, Ranged]
+    desc = 'To play this card, you must discard a card.'
+    def valid_play(self, player):
+        for h in player.hand:
+            if h is not self:
+                return True
+        return False
+    def on_play(self, player):
+        actions = []
+        for h in player.hand:
+            if h is not self:
+                actions.append(action.DiscardFrom(h, player.hand))
+        #TODO: ensure at least one of these actions is chosen!
+        self.game.choice(actions)
+
+class CyclopsEnergy(Hero):
+    name = 'Cyclops: Unending Energy'
+    cost = 6
+    power = 4
+    tags = [XMen, Ranged]
+    return_from_discard = True
+    desc = 'If you discard this card, you may return it to your hand'
+    def valid_play(self, player):
+        for h in player.hand:
+            if h is not self:
+                return True
+        return False
+    def on_play(self, player):
+        actions = []
+        for h in player.hand:
+            if h is not self:
+                actions.append(action.DiscardFrom(h, player.hand))
+        #TODO: ensure at least one of these actions is chosen!
+        self.game.choice(actions)
+
+class CyclopsUnited(Hero):
+    name = 'Cyclops: X-Men United'
+    cost = 8
+    power = 6
+    extra_power = True
+    tags = [XMen, Ranged]
+    desc = '<XMn> P+2 for each other <XMn> played this turn'
+    def on_play(self, player):
+        count = player.count_played(tag=XMen, ignore=self)
+        player.available_power += 2 * count

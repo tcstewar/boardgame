@@ -47,8 +47,11 @@ class HeroGroup(Group):
 
 class Tactic(bg.Card):
     group = None
+    extra_victory = None
     def __init__(self, game):
         super(Tactic, self).__init__(game)
+    def text(self):
+        return '%s: %s' % (self.name, self.desc)
 
 class Mastermind(bg.Card):
     def __init__(self, game):
@@ -102,9 +105,10 @@ class Hero(bg.Card):
     extra_star = False
     tags = []
     desc = ''
+    return_from_discard = False
 
     def text(self):
-        name = '%40s' % self.name
+        name = '%35s' % self.name
         ep = '+' if self.extra_power else ''
         es = '+' if self.extra_star else ''
         tags = [t.short_name for t in self.tags]
@@ -131,6 +135,7 @@ class Wound(bg.Card):
     power = 0
     star = 0
     cost = 0
+    return_from_discard = False
     def __str__(self):
         return 'Wound'
     def text(self):
