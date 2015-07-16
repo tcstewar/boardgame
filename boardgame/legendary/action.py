@@ -23,6 +23,7 @@ class EndTurn(bg.Action):
         player.discard_played()
         player.draw_new_hand()
         player.extra_draw_count = 0
+        player.clear_handlers()
         game.state = BeginTurn
         game.next_player()
 
@@ -200,7 +201,7 @@ class Play(bg.Action):
 
 class RecruitHero(bg.Action):
     def __str__(self):
-        return 'Recruit %s' % self.card
+        return '[C%d] Recruit %s' % (self.card.cost, self.card)
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
@@ -246,13 +247,13 @@ class FightVillain(bg.Action):
     def perform(self, game, player):
         player.has_fought = True
         player.available_power -= self.card.power
-        self.card.on_fight(player)
         if self.card in game.city:
             index = game.city.index(self.card)
             game.city[index] = None
         player.victory_pile.append(self.card)
         player.victory_pile.extend(self.card.captured)
         del self.card.captured[:]
+        self.card.on_fight(player)
 
 class FightMastermind(bg.Action):
     def __str__(self):

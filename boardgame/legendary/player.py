@@ -21,6 +21,12 @@ class Player(object):
         for i in range(4):
             self.gain(hero.ShieldTrooper(game))
         self.draw_new_hand()
+        self.handlers = {}
+        self.handlers[self.on_fight] = []
+
+    def clear_handlers(self):
+        for v in self.handlers.values():
+            del v[:]
 
     def discard_hand(self):
         self.discard.extend(self.hand)
@@ -83,6 +89,10 @@ class Player(object):
             self.victory_pile.append(self.game.bystanders.pop())
             self.game.event('Rescued Bystander')
 
+
+    def on_fight(self, enemy):
+        for x in self.handlers[on_fight]:
+            x(enemy)
 
 
 

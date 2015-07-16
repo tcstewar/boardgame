@@ -19,7 +19,8 @@ class Villain(object):
     def capture(self, card):
         self.captured.append(card)
     def __str__(self):
-        return '%s (%d)' % (self.name, self.power)
+        ev = '+' if self.extra_victory else ''
+        return '%s [P%d V%d%s]' % (self.name, self.power, self.victory, ev)
     def on_fight(self, player):
         pass
     def on_escape(self):
@@ -30,9 +31,10 @@ class Villain(object):
         name = '%40s' % self.name
         group = self.group.name
         ev = '+' if self.extra_victory else ''
-        return '%s <%s> [V%d%s] %s' % (name, group,
-                                        self.victory, ev,
-                                        self.desc)
+        return '%s <%s> [P%d V%d%s] %s' % (name, group,
+                                           self.power,
+                                           self.victory, ev,
+                                           self.desc)
 
 
 class VillainGroup(Group):
@@ -77,6 +79,7 @@ class MasterStrike(bg.Card):
         return 'Master Strike'
 class Bystander(bg.Card):
     victory = 1
+    extra_victory = False
     group = None
     def __str__(self):
         return 'Bystander'
@@ -129,5 +132,7 @@ class Wound(bg.Card):
     star = 0
     cost = 0
     def __str__(self):
+        return 'Wound'
+    def text(self):
         return 'Wound'
 

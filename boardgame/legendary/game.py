@@ -11,8 +11,8 @@ from .player import Player
 from .core import *
 
 class Legendary(bg.BoardGame):
-    def __init__(self, seed=None):
-        super(Legendary, self).__init__(seed=seed)
+    def reset(self, seed=None, filename='game.sav'):
+        super(Legendary, self).reset(seed=seed, filename=filename)
         self.villain = []
         self.city = [None, None, None, None, None]
         self.hero = []
@@ -48,9 +48,14 @@ class Legendary(bg.BoardGame):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
 
-        self.hero.extend(hero.SpiderMan(self).group)
-        self.hero.extend(hero.IronMan(self).group)
-        self.hero.extend(hero.Wolverine(self).group)
+        self.hero.extend(hero.Hawkeye(self).group)
+        self.hero.extend(hero.Hawkeye(self).group)
+        self.hero.extend(hero.Hawkeye(self).group)
+        self.hero.extend(hero.Hawkeye(self).group)
+        self.hero.extend(hero.Hawkeye(self).group)
+        #self.hero.extend(hero.SpiderMan(self).group)
+        #self.hero.extend(hero.IronMan(self).group)
+        #self.hero.extend(hero.Wolverine(self).group)
         self.rng.shuffle(self.hero)
 
         self.fill_hq()
@@ -181,8 +186,6 @@ class Legendary(bg.BoardGame):
             lines.append(event)
         for i in range(4-len(self.recent_events)):
             lines.append('................')
-        self.events.extend(self.recent_events)
-        del self.recent_events[:]
 
         return '\n'.join(lines)
 

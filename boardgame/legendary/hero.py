@@ -195,4 +195,76 @@ class WolverineNoMercy(Hero):
         self.game.choice(actions)
 
 
+class Hawkeye(HeroGroup):
+    def fill(self):
+        self.add(HawkeyeCoveringFire, 3)
+        self.add(HawkeyeTrick, 1)
+        self.add(HawkeyeQuick, 5)
+        self.add(HawkeyeTeam, 5)
+
+class HawkeyeCoveringFire(Hero):
+    name = 'Hawkeye: Covering Fire'
+    cost = 5
+    power = 3
+    tags = [Avenger, Tech]
+    desc = ('<Tec>: Choose one: Each other player draws a card or '
+            'each other player discards a card.')
+    def on_play(self, player):
+        if player.count_played(tag=Tech, ignore=self):
+            actions = [
+                bg.CustomAction('Each other player draws a card',
+                          self.on_choose_draw, kwargs=dict(player=player)),
+                bg.CustomAction('Each other player discards a card',
+                          self.on_choose_discard, kwargs=dict(player=player)),
+                ]
+            self.game.choice(actions)
+
+    def on_choose_draw(self, player):
+        for p in self.game.players:
+            if p is not player:
+                p.draw(1)
+
+    def on_choose_discard(self, player):
+        for p in self.game.players:
+            if p is not player:
+                actions = []
+                for h in p.hand:
+                    actions.append(action.DiscardFrom(h, p.hand))
+                self.game.choice(actions, player=p)
+
+class HawkeyeTeam(Hero):
+    name = 'Hawkeye: Team Player'
+    cost = 4
+    power = 2
+    extra_power = True
+    tags = [Avenger, Tech]
+    desc = '<Avg>: P+1'
+    def on_play(self, player):
+        if player.count_played(tag=Avenger, ignore=self):
+            player.available_power +=1
+
+class HawkeyeQuick(Hero):
+    name = 'Hawkeye: Quick Draw'
+    cost = 3
+    power = 1
+    tags = [Avenger, Instinct]
+    desc = 'Draw a card'
+    def on_play(self, player):
+        player.draw(1)
+
+
+class HawkeyeTrick(Hero):
+    name = 'Hawkeye: Impossible Trick Shot'
+    cost = 7
+    power = 5
+    tags = [Avenger, Tech]
+    desc = ('Whenever you fight a Villain or Mastermind this turn, '
+            'rescue 3 Bystanders')
+    def on_play(self, player):
+        def on_fight(enemy):
+            player.rescue_bystander()
+            player.rescue_bystander()
+            player.rescue_bystander()
+        player.handlers[player.on_fight].append(on_fight)
+
 
