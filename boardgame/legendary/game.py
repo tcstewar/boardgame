@@ -11,8 +11,8 @@ from .player import Player
 from .core import *
 
 class Legendary(bg.BoardGame):
-    def reset(self, seed=None, filename='game.sav'):
-        super(Legendary, self).reset(seed=seed, filename=filename)
+    def reset(self, seed=None):
+        super(Legendary, self).reset(seed=seed)
         self.villain = []
         self.city = [None, None, None, None, None]
         self.hero = []

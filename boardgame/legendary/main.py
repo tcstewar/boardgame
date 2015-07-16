@@ -7,6 +7,8 @@ def text_choice(game, actions):
         s = raw_input('Choose: ')
         if s == 'u':
             return 'undo'
+        elif s == 'l':
+            return 'load autosave.sav'
         try:
             value = int(s) - 1
         except:
@@ -22,6 +24,8 @@ if __name__ == '__main__':
 
     def selector(game, actions):
         print game.text_state()
+        if len(game.choices) > 0:
+            game.save('autosave.sav')
         return text_choice(game, actions)
     game.run(selector)
     print game.text_state()

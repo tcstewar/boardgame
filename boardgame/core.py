@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 
 class Action(object):
@@ -47,10 +49,10 @@ class ActionSet(object):
         action.perform(game, player)
 
 class BoardGame(object):
-    def __init__(self, seed=None, filename='game.sav'):
-        self.reset(seed=seed, filename=filename)
+    def __init__(self, seed=None):
+        self.reset(seed=seed)
 
-    def reset(self, seed=None, filename='game.sav'):
+    def reset(self, seed=None):
         self.seed = seed
         self.rng = np.random.RandomState(seed=seed)
         self.player_index = 0
@@ -60,7 +62,6 @@ class BoardGame(object):
         self.action_queue = []
         self.players = []
         self.choices = []
-        self.filename = filename
 
     def event(self, text):
         self.recent_events.append(text)
@@ -94,24 +95,39 @@ class BoardGame(object):
                 choice = selector(self, valid)
                 self.events.extend(self.recent_events)
                 del self.recent_events[:]
-                if choice == 'undo':
-                    self.undo()
+                if isinstance(choice, basestring):
+                    if choice == 'undo':
+                        self.undo()
+                    elif choice.startswith('load '):
+                        self.load(choice[5:])
+                    else:
+                        raise ValueError('Unknown choice "%s"' % choice)
                 else:
                     actions.select(self, valid[choice])
                     self.choices.append(choice)
 
     def undo(self):
         choices = self.choices[:-1]
-        self.reset(seed=self.seed, filename=self.filename)
+        self.reset(seed=self.seed)
 
         def selector(game, actions):
             return choices.pop(0)
 
         self.run(selector, steps=len(choices))
-        return
-        for c in choices:
-            actions = self.action_queue.pop(0)
-            valid = actions.get_valid_actions(self)
-            if len(valid) > 0:
-                actions.select(self, valid[c])
-                self.choices.append(c)
+
+    def save(self, filename):
+        state = dict(seed=self.seed, choices=self.choices)
+        with open(filename, 'w') as f:
+            f.write(json.dumps(state))
+
+    def load(self, filename):
+        with open(filename) as f:
+            state = json.loads(f.read())
+        self.reset(seed=state['seed'])
+        choices = state['choices']
+        def selector(game, actions):
+            return choices.pop(0)
+        self.run(selector, steps=len(choices))
+
+
+
