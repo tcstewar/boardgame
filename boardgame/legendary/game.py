@@ -231,7 +231,8 @@ class Legendary(bg.BoardGame):
 
         lines.append('LEGENDARY  (Game seed=%d)' % self.seed)
         lines.append('----------------------------------------')
-        lines.append('Mastermind: %s' % self.mastermind.text())
+        lines.append('Mastermind: %s (%d/4)' % (self.mastermind.text(),
+                                                len(self.mastermind.tactics)))
         lines.append('Scheme: %s' % self.scheme)
         lines.append('Escaped: %d' % len(self.escaped))
         def text(x):
