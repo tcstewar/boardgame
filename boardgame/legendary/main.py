@@ -32,12 +32,15 @@ if __name__ == '__main__':
                         help='Mastermind to use')
     parser.add_argument('-v', '--villain', default=None, type=str,
                         help='Villain to use')
+    parser.add_argument('--hero', default=None, type=str,
+                        help='Hero to use')
     args = parser.parse_args()
 
 
     game = boardgame.legendary.Legendary(seed=args.seed,
                                          n_players=args.players,
                                          mastermind=args.mastermind,
+                                         hero=args.hero,
                                          villain=args.villain)
 
     def selector(game, actions):

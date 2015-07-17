@@ -21,6 +21,7 @@ class ShieldOfficer(Hero):
     tags = [Shield]
 
 class IronMan(HeroGroup):
+    name = 'Iron Man'
     def fill(self):
         self.add(IronManRepulsor, 5)
         self.add(IronManQuantum, 1)
@@ -69,6 +70,7 @@ class IronManRepulsor(Hero):
             player.available_power += 1
 
 class SpiderMan(HeroGroup):
+    name = 'Spider-Man'
     def fill(self):
         self.add(SpiderManStrength, 5)
         self.add(SpiderManAmazing, 1)
@@ -142,6 +144,7 @@ class SpiderManWeb(Hero):
                 player.stack.insert(0, c)
 
 class Wolverine(HeroGroup):
+    name = 'Wolverine'
     def fill(self):
         self.add(WolverineAmbush, 5)
         self.add(WolverineAnimal, 5)
@@ -197,6 +200,7 @@ class WolverineNoMercy(Hero):
 
 
 class Hawkeye(HeroGroup):
+    name = 'Hawkeye'
     def fill(self):
         self.add(HawkeyeCoveringFire, 3)
         self.add(HawkeyeTrick, 1)
@@ -270,6 +274,7 @@ class HawkeyeTrick(Hero):
 
 
 class Cyclops(HeroGroup):
+    name = 'Cyclops'
     def fill(self):
         self.add(CyclopsDetermination, 5)
         self.add(CyclopsOptic, 5)

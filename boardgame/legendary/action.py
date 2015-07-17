@@ -147,7 +147,11 @@ class KOFrom(bg.Action):
         return self.card in self.location
     def perform(self, game, player):
         game.ko.append(self.card)
-        self.location.remove(self.card)
+        if self.location is game.hq:
+            game.hq[game.hq.index(self.card)] = None
+            game.fill_hq()
+        else:
+            self.location.remove(self.card)
 
 class KOFromHQ(bg.Action):
     def __str__(self):

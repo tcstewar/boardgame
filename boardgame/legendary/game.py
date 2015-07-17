@@ -5,7 +5,7 @@ import boardgame as bg
 import villains
 import masterminds
 import schemes
-from . import hero
+from . import hero as hero_module
 from . import action
 from .player import Player
 
@@ -13,7 +13,8 @@ from .player import Player
 from .core import *
 
 class Legendary(bg.BoardGame):
-    def reset(self, seed=None, n_players=2, mastermind=None, villain=None):
+    def reset(self, seed=None, n_players=2, mastermind=None, villain=None,
+                                            hero=None):
         super(Legendary, self).reset(seed=seed)
         self.villain = []
         self.city = [None, None, None, None, None]
@@ -23,7 +24,7 @@ class Legendary(bg.BoardGame):
         self.ko = []
         self.wounds = [Wound(self) for i in range(30)]
         self.bystanders = [Bystander(self) for i in range(30)]
-        self.officers = [hero.ShieldOfficer(self) for i in range(30)]
+        self.officers = [hero_module.ShieldOfficer(self) for i in range(30)]
         self.players = [Player(self) for i in range(n_players)]
 
         self.state = BeginTurn
@@ -46,15 +47,21 @@ class Legendary(bg.BoardGame):
         vhs = dict(inspect.getmembers(villains,
             lambda x: inspect.isclass(x) and issubclass(x, HenchmenGroup) and
                        not x is HenchmenGroup))
+        hs = dict(inspect.getmembers(hero_module,
+            lambda x: inspect.isclass(x) and issubclass(x, HeroGroup) and
+                       not x is HeroGroup))
 
         if mastermind is not None:
             self.mastermind = ms[mastermind](self)
         else:
             self.mastermind = self.rng.choice(ms.values())(self)
 
-        n_vg = {2:2, 3:3, 4:3, 5:4}[n_players]
-        n_vh = {2:1, 3:1, 4:2, 5:2}[n_players]
-        n_by = {2:2, 3:8, 4:8, 5:12}[n_players]
+        n_vg = {1:1, 2:2, 3:3, 4:3, 5:4}[n_players]
+        n_vh = {1:1, 2:1, 3:1, 4:2, 5:2}[n_players]
+        n_by = {1:1, 2:2, 3:8, 4:8, 5:12}[n_players]
+        n_hg = {1:3, 2:5, 3:5, 4:5, 5:6}[n_players]
+
+        solo = n_players == 1
 
         if villain is not None:
             if villain in vs:
@@ -70,9 +77,20 @@ class Legendary(bg.BoardGame):
                 self.event('Villain: %s' % cls.name)
             n_vg = 0
             n_vh = 0
+        if hero is not None:
+            if hero in hs:
+                cls = hs[hero]
+            else:
+                print 'Unknown Hero "%s"' % hero
+                print 'Known Heroes: %s' % hs.keys()
+                raise ValueError
+            for i in range(n_hg):
+                self.hero.extend(cls(self).group)
+                self.event('Hero: %s' % cls.name)
+            n_hg = 0
 
         for i in range(n_vg):
-            if self.mastermind.always_leads in vs.values():
+            if self.mastermind.always_leads in vs.values() and not solo:
                 cls = self.mastermind.always_leads
             else:
                 cls = self.rng.choice(vs.values())
@@ -83,7 +101,7 @@ class Legendary(bg.BoardGame):
             self.villain.extend(cls(self).group)
             self.event('Villain: %s' % cls.name)
         for i in range(n_vh):
-            if self.mastermind.always_leads in vhs.values():
+            if self.mastermind.always_leads in vhs.values() and not solo:
                 cls = self.mastermind.always_leads
             else:
                 cls = self.rng.choice(vhs.values())
@@ -91,23 +109,30 @@ class Legendary(bg.BoardGame):
                 if vhs[k] is cls:
                     del vhs[k]
                     break
-            self.villain.extend(cls(self).group)
+            if solo:
+                self.villain.extend(cls(self).group[:3])
+            else:
+                self.villain.extend(cls(self).group)
             self.event('Henchmen: %s' % cls.name)
 
 
         self.scheme = schemes.UnleashCube(self)
-        for i in range(5):
+
+        for i in range(5 if not solo else 1):
             self.villain.append(MasterStrike(self))
 
         for i in range(n_by):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
 
-        self.hero.extend(hero.Cyclops(self).group)
-        self.hero.extend(hero.Hawkeye(self).group)
-        self.hero.extend(hero.SpiderMan(self).group)
-        self.hero.extend(hero.IronMan(self).group)
-        self.hero.extend(hero.Wolverine(self).group)
+        for i in range(n_hg):
+            cls = self.rng.choice(hs.values())
+            for k in hs.keys():
+                if hs[k] is cls:
+                    del hs[k]
+                    break
+            self.hero.extend(cls(self).group)
+            self.event('Hero: %s' % cls.name)
         self.rng.shuffle(self.hero)
 
         self.fill_hq()
@@ -138,6 +163,13 @@ class Legendary(bg.BoardGame):
         elif isinstance(card, SchemeTwist):
             self.event('Scheme Twist!')
             self.scheme.twist()
+            if len(self.players) == 1:
+                actions = []
+                for c in self.hq:
+                    if c is not None and c.cost <= 6:
+                        actions.append(action.KOFromHQ(c))
+                self.choice(actions)
+
         elif isinstance(card, MasterStrike):
             self.event('%s makes a master strike' % self.mastermind)
             self.mastermind.strike()
