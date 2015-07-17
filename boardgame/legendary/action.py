@@ -19,6 +19,7 @@ class EndTurn(bg.Action):
         player.available_power = 0
         player.has_fought = False
         player.has_recruited = False
+        player.has_healed = False
         player.discard_hand()
         player.discard_played()
         player.draw_new_hand()
@@ -180,24 +181,34 @@ class DiscardFrom(bg.Action):
 class GainFrom(bg.Action):
     def __str__(self):
         return 'Gain %s' % self.card
-    def __init__(self, card, location):
+    def __init__(self, card, location, player=None):
         self.card = card
         self.location = location
+        self.player = player
     def valid(self, game, player):
         return self.card in self.location
     def perform(self, game, player):
+        if self.player is not None:
+            player = self.player
         player.discard.append(self.card)
-        self.location.remove(self.card)
+        if self.location is game.hq:
+            game.hq[game.hq.index(self.card)] = None
+            game.fill_hq()
+        else:
+            self.location.remove(self.card)
 
 class ReturnFrom(bg.Action):
     def __str__(self):
         return 'Return %s' % self.card
-    def __init__(self, card, location):
+    def __init__(self, card, location, player=None):
         self.card = card
         self.location = location
+        self.player = player
     def valid(self, game, player):
         return self.card in self.location
     def perform(self, game, player):
+        if self.player is not None:
+            player = self.player
         player.stack.insert(0, self.card)
         self.location.remove(self.card)
 

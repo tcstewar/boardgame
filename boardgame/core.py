@@ -1,7 +1,7 @@
 import json
+import random
 
 import numpy as np
-import random
 
 class Action(object):
     def valid(self, game, player):
@@ -132,10 +132,17 @@ class BoardGame(object):
         with open(filename) as f:
             state = json.loads(f.read())
         self.reset(seed=state['seed'], *state['args'], **state['kwargs'])
-        choices = state['choices']
+        choices = state['choices'][:]
         def selector(game, actions):
             return choices.pop(0)
-        self.run(selector, steps=len(choices))
+        try:
+            self.run(selector, steps=len(choices))
+        except:
+            print 'Failed to load last %d steps' % len(choices)
+            self.reset(seed=state['seed'], *state['args'], **state['kwargs'])
+            choices = state['choices'][:-len(choices)-1]
+            self.run(selector, steps=len(choices))
+
 
 
 

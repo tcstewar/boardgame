@@ -321,18 +321,6 @@ class CyclopsEnergy(Hero):
     tags = [XMen, Ranged]
     return_from_discard = True
     desc = 'If you discard this card, you may return it to your hand'
-    def valid_play(self, player):
-        for h in player.hand:
-            if h is not self:
-                return True
-        return False
-    def on_play(self, player):
-        actions = []
-        for h in player.hand:
-            if h is not self:
-                actions.append(action.DiscardFrom(h, player.hand))
-        #TODO: ensure at least one of these actions is chosen!
-        self.game.choice(actions)
 
 class CyclopsUnited(Hero):
     name = 'Cyclops: X-Men United'

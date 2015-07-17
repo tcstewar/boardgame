@@ -42,6 +42,12 @@ class Legendary(bg.BoardGame):
         self.villain.extend(villains.Hydra(self).group)
         self.villain.extend(villains.SpiderFoes(self).group)
         self.villain.extend(villains.SentinelGroup(self).group)
+        if len(self.players) > 2:
+            self.villain.extend(villains.Skrulls(self).group)
+        if len(self.players) > 3:
+            self.villain.extend(villains.HandNinjaGroup(self).group)
+        if len(self.players) > 4:
+            self.villain.extend(villains.MastersOfEvil(self).group)
         for i in range(2):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
@@ -74,10 +80,10 @@ class Legendary(bg.BoardGame):
             return
         card = self.villain.pop(0)
         if isinstance(card, Villain):
-            self.event('A new Villain enters the city: %s' % card)
             self.shift_city()
             self.city[4] = card
             card.on_ambush()
+            self.event('A new Villain enters the city: %s' % card)
         elif isinstance(card, SchemeTwist):
             self.event('Scheme Twist!')
             self.scheme.twist()

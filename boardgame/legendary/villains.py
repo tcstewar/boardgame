@@ -1,6 +1,6 @@
 import boardgame as bg
 
-from .core import Villain, VillainGroup, HenchmenGroup
+from .core import Villain, VillainGroup, HenchmenGroup, Hero
 from . import action
 from . import tags
 
@@ -134,4 +134,160 @@ class Venom(Villain):
     def can_fight(self, player):
         return player.count_played(tag=tags.Covert) > 0
 
+
+class Skrulls(VillainGroup):
+    name = 'Skrulls'
+    def fill(self):
+        self.add(SuperSkrull, 3)
+        self.add(SkrullShapeshifter, 3)
+        self.add(SkrullQueen, 1)
+        self.add(PowerSkrull, 1)
+
+class PowerSkrull(Villain):
+    power = 8
+    group = Skrulls
+    name = 'Paibok the Power Skrull'
+    desc = "Fight: Each player gains a Hero from the HQ."
+    victory = 3
+    def on_fight(self, player):
+        heroes = [h for h in self.game.hq if isinstance(h, Hero)]
+        actions = []
+        for p in self.game.players:
+            for h in heroes:
+                actions.append(action.GainFrom(h, self.game.hq, player=p))
+            self.game.choice(actions)
+
+class SkrullQueen(Villain):
+    power = None
+    group = Skrulls
+    name = 'Skrull Queen Veranke'
+    desc = ("Ambush: Capture the highest-cost Hero from HQ. P is Hero's C. "
+            "Fight: Gain that Hero.")
+    victory = 4
+    def on_ambush(self):
+        costs = [h.cost if h is not None else -1 for h in self.game.hq]
+        index = costs.index(max(costs))
+        self.stolen_hero = self.game.hq[index]
+        self.game.hq[index] = None
+        self.game.fill_hq()
+        self.power = self.stolen_hero.cost
+    def on_fight(self, player):
+        self.game.event('Gained %s' % self.stolen_hero)
+        player.discard.append(self.stolen_hero)
+
+class SkrullShapeshifter(Villain):
+    power = None
+    group = Skrulls
+    name = 'Skrull Shapeshifters'
+    desc = ("Ambush: Capture the right-most Hero from HQ. P is Hero's C. "
+            "Fight: Gain that Hero.")
+    victory = 2
+    def on_ambush(self):
+        index = 4
+        while not isinstance(self.game.hq[index], Hero):
+            index -= 1
+            if index < 0:
+                self.stolen_hero = None
+                self.power = 0
+                return
+        self.stolen_hero = self.game.hq[index]
+        self.game.hq[index] = None
+        self.game.fill_hq()
+        self.power = self.stolen_hero.cost
+    def on_fight(self, player):
+        if self.stolen_hero is not None:
+            self.game.event('Gained %s' % self.stolen_hero)
+            player.discard.append(self.stolen_hero)
+
+class SuperSkrull(Villain):
+    name = 'Super-Skrull'
+    group = Skrulls
+    power = 4
+    victory = 2
+    desc = 'Fight: Each player KOs one of their Heroes.'
+    def on_fight(self, player):
+        for p in self.game.players:
+            p.ko_from(p.hand, p.played)
+
+class HandNinjaGroup(HenchmenGroup):
+    name = 'Hand Ninjas'
+    def fill(self):
+        self.add(HandNinjas, 10)
+
+class HandNinjas(Villain):
+    name = 'Hand Ninjas'
+    group = HandNinjaGroup
+    power = 3
+    victory = 1
+    desc = 'Fight: You get S+1.'
+    def on_fight(self, player):
+        player.available_star += 1
+
+class MastersOfEvil(VillainGroup):
+    name = 'Masters of Evil'
+    def fill(self):
+        self.add(Ultron, 2)
+        self.add(Whirlwind, 2)
+        self.add(Melter, 2)
+        self.add(BaronZemo, 2)
+
+class BaronZemo(Villain):
+    name = 'Baron Zemo'
+    group = MastersOfEvil
+    power = 6
+    victory = 4
+    desc = 'Fight: For each <Avg>, rescue a Bystander.'
+    def on_fight(self, player):
+        for i in range(player.count_played(tag=tags.Avenger)):
+            player.rescue_bystander()
+
+class Melter(Villain):
+    name = 'Melter'
+    group = MastersOfEvil
+    power = 5
+    victory = 3
+    desc = ('Fight: Each player reveals top card of deck. '
+            'You choose to KO or return it.')
+    def on_fight(self, player):
+        for p in self.game.players:
+            cards = p.reveal(1)
+            if len(cards) > 0:
+                actions = [
+                    action.KOFrom(cards[0], cards),
+                    action.ReturnFrom(cards[0], cards)
+                    ]
+                self.game.choice(actions)
+
+class Whirlwind(Villain):
+    name = 'Whirlwind'
+    group = MastersOfEvil
+    power = 4
+    victory = 2
+    desc = 'Fight: If you fight on the Rooftops or Bridge, KO two heros.'
+    def on_pre_fight(self, player):
+        if self is self.game.city[0] or self is self.game.city[2]:
+            player.ko_from(player.hand, player.played)
+            player.ko_from(player.hand, player.played)
+
+class Ultron(Villain):
+    name = 'Ultron'
+    group = MastersOfEvil
+    power = 6
+    victory = 2
+    desc = ('V+1 for each <Tec> you own. '
+            'Escape: Each player reveals <Tec> or gains a Wound.')
+    def extra_victory(self, player):
+        total = 0
+        for c in player.hand + player.discard + player.played + player.stack:
+            if tags.Tech in c.tags:
+                total += 1
+        return total
+    def on_escape(self):
+        for i, p in enumerate(self.game.players):
+            for c in p.hand + p.played:
+                if tags.Tech in c.tags:
+                    break
+            else:
+                self.game.event('Ultron wounds Player %d' % (i + 1))
+                p.gain_wound()
 
