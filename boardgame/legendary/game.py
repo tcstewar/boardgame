@@ -1,3 +1,5 @@
+import inspect
+
 import boardgame as bg
 
 import villains
@@ -11,7 +13,7 @@ from .player import Player
 from .core import *
 
 class Legendary(bg.BoardGame):
-    def reset(self, seed=None, n_players=2):
+    def reset(self, seed=None, n_players=2, mastermind=None, villain=None):
         super(Legendary, self).reset(seed=seed)
         self.villain = []
         self.city = [None, None, None, None, None]
@@ -35,20 +37,69 @@ class Legendary(bg.BoardGame):
                     ],
                     repeat=True)
 
-        self.mastermind = masterminds.RedSkull(self)
+        ms = dict(inspect.getmembers(masterminds,
+            lambda x: inspect.isclass(x) and issubclass(x, Mastermind) and
+                       not x is Mastermind))
+        vs = dict(inspect.getmembers(villains,
+            lambda x: inspect.isclass(x) and issubclass(x, VillainGroup) and
+                       not x is VillainGroup))
+        vhs = dict(inspect.getmembers(villains,
+            lambda x: inspect.isclass(x) and issubclass(x, HenchmenGroup) and
+                       not x is HenchmenGroup))
+
+        if mastermind is not None:
+            self.mastermind = ms[mastermind](self)
+        else:
+            self.mastermind = self.rng.choice(ms.values())(self)
+
+        n_vg = {2:2, 3:3, 4:3, 5:4}[n_players]
+        n_vh = {2:1, 3:1, 4:2, 5:2}[n_players]
+        n_by = {2:2, 3:8, 4:8, 5:12}[n_players]
+
+        if villain is not None:
+            if villain in vs:
+                cls = vs[villain]
+            elif villain in vhs:
+                cls = vhs[villain]
+            else:
+                print 'Unknown Villain "%s"' % villain
+                print 'Known Villains: %s' % (vs.keys() + vhs.keys())
+                raise ValueError
+            for i in range(n_vg + n_vh):
+                self.villain.extend(cls(self).group)
+                self.event('Villain: %s' % cls.name)
+            n_vg = 0
+            n_vh = 0
+
+        for i in range(n_vg):
+            if self.mastermind.always_leads in vs.values():
+                cls = self.mastermind.always_leads
+            else:
+                cls = self.rng.choice(vs.values())
+            for k in vs.keys():
+                if vs[k] is cls:
+                    del vs[k]
+                    break
+            self.villain.extend(cls(self).group)
+            self.event('Villain: %s' % cls.name)
+        for i in range(n_vh):
+            if self.mastermind.always_leads in vhs.values():
+                cls = self.mastermind.always_leads
+            else:
+                cls = self.rng.choice(vhs.values())
+            for k in vhs.keys():
+                if vhs[k] is cls:
+                    del vhs[k]
+                    break
+            self.villain.extend(cls(self).group)
+            self.event('Henchmen: %s' % cls.name)
+
+
         self.scheme = schemes.UnleashCube(self)
         for i in range(5):
             self.villain.append(MasterStrike(self))
-        self.villain.extend(villains.Hydra(self).group)
-        self.villain.extend(villains.SpiderFoes(self).group)
-        self.villain.extend(villains.SentinelGroup(self).group)
-        if len(self.players) > 2:
-            self.villain.extend(villains.Skrulls(self).group)
-        if len(self.players) > 3:
-            self.villain.extend(villains.HandNinjaGroup(self).group)
-        if len(self.players) > 4:
-            self.villain.extend(villains.MastersOfEvil(self).group)
-        for i in range(2):
+
+        for i in range(n_by):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
 

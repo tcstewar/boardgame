@@ -104,8 +104,7 @@ class GreenGoblin(Villain):
     desc = 'Ambush: Green Goblin captures a Bystander'
     victory = 4
     def on_ambush(self):
-        card = self.game.capture_bystander()
-        assert card is self
+        self.game.capture_bystander()
 
 class Lizard(Villain):
     power = 3
