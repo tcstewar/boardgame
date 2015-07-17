@@ -14,10 +14,10 @@ def text_choice(game, actions):
             return 'load autosave.sav'
         try:
             value = int(s) - 1
+            if 0 <= value < len(actions):
+                return value
         except:
             print 'Invalid choice'
-        if 0 <= value < len(actions):
-            return value
 
 if __name__ == '__main__':
 

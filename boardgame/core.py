@@ -10,11 +10,16 @@ class Action(object):
         return self.name
 
 class CustomAction(Action):
-    def __init__(self, name, func, args=(), kwargs={}):
+    def __init__(self, name, func, valid=None, args=(), kwargs={}):
         self.name = name
         self.func = func
         self.args = args
         self.kwargs = kwargs
+        self.valid_func = valid
+    def valid(self, game, player):
+        if self.valid_func is not None:
+            return self.valid_func(game, player)
+        return True
     def perform(self, game, player):
         self.func(*self.args, **self.kwargs)
 

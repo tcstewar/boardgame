@@ -267,7 +267,6 @@ class DoNothing(bg.Action):
     def perform(self, game, player):
         pass
 
-
 class FightVillain(bg.Action):
     def __str__(self):
         return 'Fight %s' % self.card
@@ -280,6 +279,9 @@ class FightVillain(bg.Action):
         self.card.on_pre_fight(player)
         player.has_fought = True
         player.available_power -= self.card.power
+        player.defeat(self.card)
+
+        '''
         if self.card in game.city:
             index = game.city.index(self.card)
             game.city[index] = None
@@ -287,6 +289,7 @@ class FightVillain(bg.Action):
         player.victory_pile.extend(self.card.captured)
         del self.card.captured[:]
         self.card.on_fight(player)
+        '''
 
 class FightMastermind(bg.Action):
     def __str__(self):
@@ -298,11 +301,17 @@ class FightMastermind(bg.Action):
     def perform(self, game, player):
         player.has_fought = True
         player.available_power -= self.card.power
+        player.defeat(self.card)
+
+        '''
         tactic = self.card.tactics.pop(0)
         game.event('Mastermind Tactic: %s' % tactic.text())
-        tactic.on_fight(player)
+
         player.victory_pile.append(tactic)
         player.victory_pile.extend(self.card.captured)
         del self.card.captured[:]
+        tactic.on_fight(player)
+        '''
+
         if len(self.card.tactics) == 0:
             game.good_wins()

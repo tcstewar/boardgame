@@ -1,7 +1,7 @@
 import boardgame as bg
 
 import action
-from .core import Hero, HeroGroup
+from .core import Hero, HeroGroup, Bystander
 from .tags import *
 
 class ShieldAgent(Hero):
@@ -337,3 +337,85 @@ class CyclopsUnited(Hero):
     def on_play(self, player):
         count = player.count_played(tag=XMen, ignore=self)
         player.available_power += 2 * count
+
+
+class BlackWidow(HeroGroup):
+    name = 'Black Widow'
+    def fill(self):
+        self.add(BlackWidowCovert, 3)
+        self.add(BlackWidowRescue, 5)
+        self.add(BlackWidowMission, 5)
+        self.add(BlackWidowSniper, 1)
+
+class BlackWidowCovert(Hero):
+    name = 'Black Widow: Covert Operation'
+    cost = 4
+    power = 0
+    extra_power = True
+    tags = [Avenger, Covert]
+    desc = 'P+1 for each Bystander in victory pile'
+    def on_play(self, player):
+        for c in player.victory_pile:
+            if isinstance(c, Bystander):
+                player.available_power += 1
+
+class BlackWidowRescue(Hero):
+    name = 'Black Widow: Dangerous Rescue'
+    cost = 3
+    power = 2
+    tags = [Avenger, Covert]
+    desc = ('<Cov> You may KO a card from hand or discard. '
+            'If you do, rescue a Bystander')
+    def on_play(self, player):
+        if player.count_played(tag=Covert, ignore=self) > 0:
+            actions = []
+            for c in player.hand + player.discard:
+                actions.append(bg.CustomAction(
+                    name='KO %s to rescue Bystander' % c,
+                    valid = lambda game, player: (c in player.hand or
+                                                  c in player.discard),
+                    func=self.on_ko_rescue,
+                    kwargs=dict(card=c, player=player)))
+            actions.append(action.DoNothing())
+            self.game.choice(actions)
+
+    def on_ko_rescue(self, card, player):
+        if card in player.hand:
+            player.hand.remove(card)
+        elif card in player.discard:
+            player.discard.remove(card)
+        else:
+            #TODO: if action selection is done immediately, this should
+            # never happen!
+            return
+        self.game.ko.append(card)
+        player.rescue_bystander()
+
+class BlackWidowMission(Hero):
+    name = 'Black Widow: Mission Accomplished'
+    cost = 2
+    tags = [Avenger, Tech]
+    desc = 'Draw a card.  <Tec>: Rescue a Bystander'
+    def on_play(self, player):
+        player.draw(1)
+        if player.count_played(tag=Tech, ignore=self) > 0:
+            player.rescue_bystander()
+
+class BlackWidowSniper(Hero):
+    name = 'Black Widow: Silent Sniper'
+    cost = 7
+    power = 4
+    tags = [Avenger, Covert]
+    desc = 'Defeat a Villain or Mastermind that has a Bystander'
+    def on_play(self, player):
+        actions = []
+        for v in [self.game.mastermind] + self.game.city:
+            if v is not None:
+                for c in v.captured:
+                    if isinstance(c, Bystander):
+                        actions.append(bg.CustomAction(
+                            'Defeat %s' % v.text(),
+                            func=player.defeat,
+                            kwargs=dict(villain=v)))
+        if len(actions) > 0:
+            self.game.choice(actions)

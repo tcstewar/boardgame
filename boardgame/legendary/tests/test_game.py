@@ -15,7 +15,14 @@ def test_game_random():
 def test_game_first():
     for p in range(2, 6):
         for i in range(100):
-            game = Legendary(seed=i + 30 * p, n_players=p)
+            seed = i + 30 * p
+            game = Legendary(seed=seed, n_players=p)
             rand = boardgame.testing.FirstPlay()
-            game.run(rand.selector)
+            try:
+                game.run(rand.selector)
+            except:
+                game.reset(seed=seed, n_players=p)
+                game.run(rand.selector, steps=rand.n_choices - 1)
+                game.save('autosave.sav')
+                raise
 

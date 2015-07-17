@@ -105,5 +105,19 @@ class Player(object):
                     actions.append(action.KOFrom(h, loc))
         self.game.choice(actions)
 
+    def defeat(self, villain):
+        self.victory_pile.extend(villain.captured)
+        del villain.captured[:]
+
+        if villain is self.game.mastermind:
+            villain = villain.tactics.pop(0)
+            self.game.event('Mastermind Tactic: %s' % villain.text())
+        elif villain in self.game.city:
+            index = self.game.city.index(villain)
+            self.game.city[index] = None
+
+        self.victory_pile.append(villain)
+        villain.on_fight(self)
+
 
 
