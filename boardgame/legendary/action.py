@@ -23,6 +23,7 @@ class EndTurn(bg.Action):
         player.discard_played()
         player.draw_new_hand()
         player.extra_draw_count = 0
+        player.draw_target = 6
         player.clear_handlers()
         game.state = BeginTurn
         game.next_player()
@@ -118,7 +119,8 @@ class Fight(bg.Action):
             return True
         cards = [h for h in game.city
                    if h is not None and
-                      h.power <= player.available_power]
+                      h.power <= player.available_power and
+                      h.can_fight(player)]
         return len(cards) > 0
     def perform(self, game, player):
         actions = []
@@ -128,7 +130,8 @@ class Fight(bg.Action):
             actions.append(FightMastermind(game.mastermind))
         for h in game.city:
             if (h is not None and
-                    h.power <= player.available_power):
+                    h.power <= player.available_power and
+                    h.can_fight(player)):
                 actions.append(FightVillain(h))
         game.choice(actions)
 
@@ -256,8 +259,10 @@ class FightVillain(bg.Action):
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
-        return player.available_power >= self.card.power
+        return (player.available_power >= self.card.power and
+                self.card.can_fight(player))
     def perform(self, game, player):
+        self.card.on_pre_fight(player)
         player.has_fought = True
         player.available_power -= self.card.power
         if self.card in game.city:

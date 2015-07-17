@@ -23,6 +23,10 @@ class Villain(object):
         return '%s [P%d V%d%s]' % (self.name, self.power, self.victory, ev)
     def on_fight(self, player):
         pass
+    def on_pre_fight(self, player):
+        pass
+    def can_fight(self, player):
+        return True
     def on_escape(self):
         pass
     def on_ambush(self):

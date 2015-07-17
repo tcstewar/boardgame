@@ -40,8 +40,8 @@ class Legendary(bg.BoardGame):
         for i in range(5):
             self.villain.append(MasterStrike(self))
         self.villain.extend(villains.Hydra(self).group)
-        self.villain.extend(villains.Hydra(self).group)
-        self.villain.extend(villains.Hydra(self).group)
+        self.villain.extend(villains.SpiderFoes(self).group)
+        self.villain.extend(villains.SentinelGroup(self).group)
         for i in range(2):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)

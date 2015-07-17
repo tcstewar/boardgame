@@ -151,6 +151,7 @@ class Wolverine(HeroGroup):
 class WolverineAmbush(Hero):
     name = 'Wolverine: Sudden Ambush'
     cost = 4
+    power = 2
     tags = [XMen, Covert]
     desc = 'If you drew any extra cards this turn, P+2'
     extra_power = True

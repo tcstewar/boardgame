@@ -1,6 +1,8 @@
 import boardgame as bg
 
 from . import hero
+from .core import Hero
+from . import action
 
 class Player(object):
     def __init__(self, game):
@@ -16,6 +18,7 @@ class Player(object):
         self.has_recruited = False
         self.has_healed = False
         self.extra_draw_count = 0
+        self.draw_target = 6
         for i in range(8):
             self.gain(hero.ShieldAgent(game))
         for i in range(4):
@@ -37,7 +40,7 @@ class Player(object):
         del self.played[:]
 
     def draw_new_hand(self):
-        self.draw(6)
+        self.draw(self.draw_target)
 
     def gain(self, card):
         self.discard.append(card)
@@ -93,6 +96,14 @@ class Player(object):
     def on_fight(self, enemy):
         for x in self.handlers[on_fight]:
             x(enemy)
+
+    def ko_from(self, *locations):
+        actions = []
+        for loc in locations:
+            for h in loc:
+                if isinstance(h, Hero):
+                    actions.append(action.KOFrom(h, loc))
+        self.game.choice(actions)
 
 
 

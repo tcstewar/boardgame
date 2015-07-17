@@ -1,7 +1,8 @@
 import boardgame as bg
 
-from .core import Villain, VillainGroup
+from .core import Villain, VillainGroup, HenchmenGroup
 from . import action
+from . import tags
 
 class Hydra(VillainGroup):
     name = 'HYDRA'
@@ -64,3 +65,73 @@ class HydraSupreme(Villain):
             if v.group is Hydra and v is not self:
                 pts += 3
         return pts
+
+class SentinelGroup(HenchmenGroup):
+    name = 'Sentinel'
+    def fill(self):
+        self.add(Sentinel, 10)
+
+class Sentinel(Villain):
+    name = 'Sentinel'
+    group = SentinelGroup
+    power = 3
+    victory = 1
+    desc = 'Fight: KO one of your Heroes.'
+    def on_fight(self, player):
+        player.ko_from(player.hand, player.played)
+
+class SpiderFoes(VillainGroup):
+    name = 'Spider Foes'
+    def fill(self):
+        self.add(Venom, 2)
+        self.add(Lizard, 2)
+        self.add(GreenGoblin, 2)
+        self.add(DoctorOctopus, 2)
+
+class DoctorOctopus(Villain):
+    power = 4
+    group = SpiderFoes
+    name = 'Doctor Octopus'
+    desc = 'When you draw at the end of this turn, draw 8 instead of 6'
+    victory = 2
+    def on_fight(self, player):
+        player.draw_target = 8
+
+class GreenGoblin(Villain):
+    power = 6
+    group = SpiderFoes
+    name = 'Green Goblin'
+    desc = 'Ambush: Green Goblin captures a Bystander'
+    victory = 4
+    def on_ambush(self):
+        card = self.game.capture_bystander()
+        assert card is self
+
+class Lizard(Villain):
+    power = 3
+    group = SpiderFoes
+    name = 'The Lizard'
+    desc = ('If you fight The Lizard in the Sewers,'
+            ' each other player gains a Wound.')
+    victory = 2
+    def on_pre_fight(self, player):
+        if self is self.game.city[4]:
+            self.game.event('The Lizard causes Wounds.')
+            for p in self.game.players:
+                if p is not player:
+                    p.gain_wound()
+
+class Venom(Villain):
+    power = 5
+    group = SpiderFoes
+    name = 'Venom'
+    desc = ("You can't defeat Venom unless you have <Cov>. "
+            "Escape: each player gains a Wound.")
+    victory = 3
+    def on_escape(self):
+        for p in self.game.players:
+            p.gain_wound()
+    def can_fight(self, player):
+        return player.count_played(tag=tags.Covert) > 0
+
+
