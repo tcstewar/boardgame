@@ -1,3 +1,6 @@
+import argparse
+
+
 def text_choice(game, actions):
     while True:
         for i, a in enumerate(actions):
@@ -20,7 +23,15 @@ if __name__ == '__main__':
 
     import boardgame.legendary
 
-    game = boardgame.legendary.Legendary(seed=1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--players', default=2, type=int,
+                        help='number of players')
+    parser.add_argument('-s', '--seed', default=None, type=int,
+                        help='game seed')
+    args = parser.parse_args()
+
+
+    game = boardgame.legendary.Legendary(seed=args.seed, n_players=args.players)
 
     def selector(game, actions):
         print game.text_state()

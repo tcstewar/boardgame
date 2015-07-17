@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+import random
 
 class Action(object):
     def valid(self, game, player):
@@ -49,8 +50,12 @@ class ActionSet(object):
         action.perform(game, player)
 
 class BoardGame(object):
-    def __init__(self, seed=None):
-        self.reset(seed=seed)
+    def __init__(self, seed=None, *args, **kwargs):
+        if seed is None:
+            seed = random.randrange(0x7FFFFFF)
+        self.args = args
+        self.kwargs = kwargs
+        self.reset(seed=seed, *args, **kwargs)
 
     def reset(self, seed=None):
         self.seed = seed
@@ -108,7 +113,7 @@ class BoardGame(object):
 
     def undo(self):
         choices = self.choices[:-1]
-        self.reset(seed=self.seed)
+        self.reset(seed=self.seed, *self.args, **self.kwargs)
 
         def selector(game, actions):
             return choices.pop(0)
@@ -116,14 +121,17 @@ class BoardGame(object):
         self.run(selector, steps=len(choices))
 
     def save(self, filename):
-        state = dict(seed=self.seed, choices=self.choices)
+        state = dict(seed=self.seed,
+                     choices=self.choices,
+                     args=self.args,
+                     kwargs=self.kwargs)
         with open(filename, 'w') as f:
             f.write(json.dumps(state))
 
     def load(self, filename):
         with open(filename) as f:
             state = json.loads(f.read())
-        self.reset(seed=state['seed'])
+        self.reset(seed=state['seed'], *state['args'], **state['kwargs'])
         choices = state['choices']
         def selector(game, actions):
             return choices.pop(0)

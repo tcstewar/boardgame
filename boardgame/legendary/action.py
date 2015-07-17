@@ -30,6 +30,8 @@ class EndTurn(bg.Action):
 class Heal(bg.Action):
     name = 'Heal Wounds'
     def valid(self, game, player):
+        if not game.state is DuringTurn:
+            return False
         if player.has_fought or player.has_recruited:
             return False
         for card in player.hand:

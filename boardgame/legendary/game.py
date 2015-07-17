@@ -11,7 +11,7 @@ from .player import Player
 from .core import *
 
 class Legendary(bg.BoardGame):
-    def reset(self, seed=None):
+    def reset(self, seed=None, n_players=2):
         super(Legendary, self).reset(seed=seed)
         self.villain = []
         self.city = [None, None, None, None, None]
@@ -22,8 +22,8 @@ class Legendary(bg.BoardGame):
         self.wounds = [Wound(self) for i in range(30)]
         self.bystanders = [Bystander(self) for i in range(30)]
         self.officers = [hero.ShieldOfficer(self) for i in range(30)]
+        self.players = [Player(self) for i in range(n_players)]
 
-        self.initialize()
         self.state = BeginTurn
         self.choice([action.StartTurn(),
                      action.PlayAll(),
@@ -35,8 +35,6 @@ class Legendary(bg.BoardGame):
                     ],
                     repeat=True)
 
-    def initialize(self):
-        self.players = [Player(self) for i in range(2)]
         self.mastermind = masterminds.RedSkull(self)
         self.scheme = schemes.UnleashCube(self)
         for i in range(5):
