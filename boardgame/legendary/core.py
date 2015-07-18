@@ -7,7 +7,9 @@ class Group(object):
         self.fill()
     def add(self, card, count):
         for i in range(count):
-            self.group.append(card(self.game))
+            c = card(self.game)
+            c.group = self.__class__
+            self.group.append(c)
 
 class Villain(object):
     power = 0
@@ -33,12 +35,12 @@ class Villain(object):
         pass
     def text(self):
         name = '%40s' % self.name
-        group = self.group.name if self.group is not None else ''
+        group = ' <%s>' % self.group.name if self.group is not None else ''
         ev = '+' if self.extra_victory else ''
-        return '%s <%s> [P%d V%d%s] %s' % (name, group,
-                                           self.power,
-                                           self.victory, ev,
-                                           self.desc)
+        return '%s%s [P%d V%d%s] %s' % (name, group,
+                                        self.power,
+                                        self.victory, ev,
+                                        self.desc)
 
 
 class VillainGroup(Group):

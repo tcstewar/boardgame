@@ -5,8 +5,9 @@ from .core import Hero
 from . import action
 
 class Player(object):
-    def __init__(self, game):
+    def __init__(self, game, name):
         self.game = game
+        self.name = name
         self.stack = []
         self.hand = []
         self.discard = []
@@ -69,6 +70,9 @@ class Player(object):
             if len(self.stack) > 0:
                 self.extra_draw_count += 1
                 self.hand.append(self.stack.pop(0))
+            else:
+                self.game.event('%s tries to draw but has no cards' %
+                                self.name)
 
     def count_played(self, tag, ignore=None):
         return len(self.get_played(tag=tag, ignore=ignore))

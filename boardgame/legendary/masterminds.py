@@ -1,7 +1,7 @@
 import boardgame as bg
 
 from . import villains
-from .core import Mastermind, Tactic, Hero
+from .core import *
 from . import action
 from . import tags
 
@@ -140,3 +140,81 @@ class DrDoomTactic4(Tactic):
     victory = 5
     def on_fight(self, player):
         player.draw_hand_extra += 3
+
+
+class Loki(Mastermind):
+    name = 'Loki'
+    desc = 'Master Strike: Each player reveals a <Str> or gains a Wound.'
+
+    always_leads = villains.EnemiesOfAsgard
+    power = 10
+
+    def __init__(self, game):
+        super(Loki, self).__init__(game)
+        self.tactics = [LokiTactic1(game), LokiTactic2(game),
+                        LokiTactic3(game), LokiTactic4(game)]
+        self.game.rng.shuffle(self.tactics)
+
+    def strike(self):
+        for p in self.game.players:
+            if p.count_played(tag=tags.Strength) == 0:
+                self.game.event('Loki wounds %s' % p.name)
+                p.gain_wound()
+
+class LokiTactic1(Tactic):
+    name = 'Whispers and Lies'
+    desc = 'Each other player KOs 2 Bystanders from victory pile'
+    victory = 5
+    def on_fight(self, player):
+        for p in self.game.players:
+            if p is not player:
+                count = 2
+                for c in p.victory_pile[:]:
+                    if isinstance(c, Bystander):
+                        p.victory_pile.remove(c)
+                        self.game.ko.append(c)
+                        count -= 1
+                        if count == 0:
+                            break
+
+class LokiTactic2(Tactic):
+    name = 'Vanishing Illusions'
+    desc = 'Each other player KOs a Villain from their victory pile.'
+    victory = 5
+    def on_fight(self, player):
+        for p in self.game.players:
+            if p is player:
+                continue
+            actions = []
+            for c in p.victory_pile:
+                if isinstance(c, Villain):
+                    actions.append(action.KOFrom(c, p.victory_pile))
+            self.game.choice(actions)
+
+class LokiTactic3(Tactic):
+    name = 'Maniacal Tyrant'
+    desc = 'KO up to 4 cards from your discard pile'
+    victory = 5
+    def on_fight(self, player):
+        actions = []
+        for c in player.discard:
+            actions.append(action.KOFrom(c, player.discard))
+        actions.append(action.DoNothing())
+        self.game.choice(actions)
+        self.game.choice(actions)
+        self.game.choice(actions)
+        self.game.choice(actions)
+
+class LokiTactic4(Tactic):
+    name = 'Cruel Ruler'
+    desc = 'Defeat a Villain in the city for free'
+    victory = 5
+    def on_fight(self, player):
+        actions = []
+        for c in self.game.city:
+            if c is not None:
+                actions.append(bg.CustomAction(
+                    'Defeat %s' % c.text(),
+                    func=player.defeat,
+                    kwargs=dict(villain=c)))
+        self.game.choice(actions)

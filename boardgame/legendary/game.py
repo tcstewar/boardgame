@@ -25,7 +25,8 @@ class Legendary(bg.BoardGame):
         self.wounds = [Wound(self) for i in range(30)]
         self.bystanders = [Bystander(self) for i in range(30)]
         self.officers = [hero_module.ShieldOfficer(self) for i in range(30)]
-        self.players = [Player(self) for i in range(n_players)]
+        self.players = [Player(self, name='Player %d' % (i+1))
+                        for i in range(n_players)]
 
         self.state = BeginTurn
         self.choice([action.StartTurn(),

@@ -1,6 +1,6 @@
 import boardgame as bg
 
-from .core import Villain, VillainGroup, Henchman, Hero
+from .core import Villain, VillainGroup, Henchman, Hero, Wound
 from . import action
 from . import tags
 
@@ -298,3 +298,94 @@ class DoombotLegion(Henchman):
         self.game.choice(actions, repeat=True, allow_same_type=False)
 
 
+class SavageLandMutates(Henchman):
+    name = 'Savage Land Mutates'
+    power = 3
+    victory = 1
+    desc = ('Fight: When you draw a next hand at the end of your turn, '
+            'draw an extra card.')
+    def on_fight(self, player):
+        player.draw_hand_extra += 1
+
+
+class EnemiesOfAsgard(VillainGroup):
+    name = 'Enemies of Asgard'
+    def fill(self):
+        self.add(Destroyer, 1)
+        self.add(Ymir, 2)
+        self.add(FrostGiant, 3)
+        self.add(Enchantress, 2)
+
+class Destroyer(Villain):
+    name = 'Destroyer'
+    power = 7
+    victory = 5
+    desc = ('Fight: KO all your <Shd> Heros. '
+            'Escape: Each player KOs 2 Heros.')
+    def on_fight(self, player):
+        for c in player.hand[:]:
+            if tags.Shield in c.tags:
+                player.hand.remove(c)
+                self.game.ko.append(c)
+                self.game.event('Destroyer KOs %s' % c)
+        for c in player.played[:]:
+            if tags.Shield in c.tags:
+                player.played.remove(c)
+                self.game.ko.append(c)
+                self.game.event('Destroyer KOs %s' % c)
+    def on_escape(self):
+        for p in self.game.players:
+            p.ko_from(p.hand, p.played)
+            p.ko_from(p.hand, p.played)
+
+class Ymir(Villain):
+    name = 'Ymir, Frost Giant King'
+    power = 6
+    victory = 4
+    desc = ('Ambush: Each player reveals <Rng> or gains a Wound.'
+            'Fight: Choose a player to KO all Wounds from hand and discard.')
+    def on_anbush(self):
+        for p in self.game.players:
+            if p.count_played(tag=tags.Ranged) == 0:
+                self.game.event('Ymir wounds %s' % p.name)
+                p.gain_wound()
+
+    def on_fight(self, player):
+        actions = []
+        for p in self.game.players:
+            actions.append(bg.CustomAction(
+                '%s KOs all Wounds' % p.name,
+                func=self.on_ko_wounds,
+                kwargs=dict(player=p)))
+        self.game.choice(actions)
+    def on_ko_wounds(self, player):
+        for c in player.hand[:]:
+            if isinstance(c, Wound):
+                self.game.ko.append(c)
+                player.hand.remove(c)
+        for c in player.discard[:]:
+            if isinstance(c, Wound):
+                self.game.ko.append(c)
+                player.discard.remove(c)
+
+class Enchantress(Villain):
+    name = 'Enchantress'
+    power = 6
+    victory = 4
+    desc = 'Fight: Draw 3 cards.'
+    def on_fight(self, player):
+        player.draw(3)
+
+class FrostGiant(Villain):
+    name = 'Frost Giant'
+    power = 4
+    victory = 2
+    desc = ('Fight: Each player reveals <Rng> or gains a Wound.'
+            ' Escape: same effect.')
+    def on_fight(self, player):
+        for p in self.game.players:
+            if p.count_played(tag=tags.Ranged) == 0:
+                self.game.event('Frost Giant wounds %s' % p.name)
+                p.gain_wound()
+    def on_escape(self):
+        self.on_fight(None)
