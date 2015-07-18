@@ -292,3 +292,27 @@ class Ultron(Villain):
                 self.game.event('Ultron wounds Player %d' % (i + 1))
                 p.gain_wound()
 
+class DoombotGroup(HenchmenGroup):
+    name = 'Doombot Legion'
+    def fill(self):
+        self.add(DoombotLegion, 10)
+
+class DoombotLegion(Villain):
+    name = 'Doombot Legion'
+    group = DoombotGroup
+    power = 3
+    victory = 1
+    desc = ('Fight: Reveal the top 2 cards of your deck. '
+           'KO one, return the other')
+    def on_fight(self, player):
+        index = len(player.hand)
+        player.draw(2)
+        cards = player.hand[index:]
+        player.hand = player.hand[:index]
+        actions = []
+        for act in [action.KOFrom, action.ReturnFrom]:
+            for card in cards:
+                actions.append(act(card, cards))
+        self.game.choice(actions, repeat=True, allow_same_type=False)
+
+

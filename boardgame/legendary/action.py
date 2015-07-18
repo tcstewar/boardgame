@@ -27,7 +27,10 @@ class EndTurn(bg.Action):
         player.draw_target = 6
         player.clear_handlers()
         game.state = BeginTurn
-        game.next_player()
+        if player.take_another_turn:
+            player.take_another_turn = False
+        else:
+            game.next_player()
 
 class Heal(bg.Action):
     name = 'Heal Wounds'

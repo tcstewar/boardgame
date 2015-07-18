@@ -18,7 +18,9 @@ class Player(object):
         self.has_recruited = False
         self.has_healed = False
         self.extra_draw_count = 0
+        self.take_another_turn = False
         self.draw_target = 6
+        self.draw_hand_extra = 0
         for i in range(8):
             self.gain(hero.ShieldAgent(game))
         for i in range(4):
@@ -40,7 +42,8 @@ class Player(object):
         del self.played[:]
 
     def draw_new_hand(self):
-        self.draw(self.draw_target)
+        self.draw(self.draw_target + self.draw_hand_extra)
+        self.draw_hand_extra = 0
 
     def gain(self, card):
         self.discard.append(card)
