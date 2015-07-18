@@ -45,8 +45,8 @@ class Legendary(bg.BoardGame):
             lambda x: inspect.isclass(x) and issubclass(x, VillainGroup) and
                        not x is VillainGroup))
         vhs = dict(inspect.getmembers(villains,
-            lambda x: inspect.isclass(x) and issubclass(x, HenchmenGroup) and
-                       not x is HenchmenGroup))
+            lambda x: inspect.isclass(x) and issubclass(x, Henchman) and
+                       not x is Henchman))
         hs = dict(inspect.getmembers(hero_module,
             lambda x: inspect.isclass(x) and issubclass(x, HeroGroup) and
                        not x is HeroGroup))
@@ -66,15 +66,19 @@ class Legendary(bg.BoardGame):
         if villain is not None:
             if villain in vs:
                 cls = vs[villain]
+                for i in range(n_vg + n_vh):
+                    self.villain.extend(cls(self).group)
+                    self.event('Villain: %s' % cls.name)
             elif villain in vhs:
                 cls = vhs[villain]
+                for i in range(n_vg + n_vh):
+                    for i in range(10):
+                        self.villain.append(cls(self))
+                    self.event('Henchman: %s' % cls.name)
             else:
                 print 'Unknown Villain "%s"' % villain
                 print 'Known Villains: %s' % (vs.keys() + vhs.keys())
                 raise ValueError
-            for i in range(n_vg + n_vh):
-                self.villain.extend(cls(self).group)
-                self.event('Villain: %s' % cls.name)
             n_vg = 0
             n_vh = 0
         if hero is not None:
@@ -109,11 +113,9 @@ class Legendary(bg.BoardGame):
                 if vhs[k] is cls:
                     del vhs[k]
                     break
-            if solo:
-                self.villain.extend(cls(self).group[:3])
-            else:
-                self.villain.extend(cls(self).group)
-            self.event('Henchmen: %s' % cls.name)
+            for i in range(3 if solo else 10):
+                self.villain.append(cls(self))
+            self.event('Henchman: %s' % cls.name)
 
 
         self.scheme = schemes.UnleashCube(self)

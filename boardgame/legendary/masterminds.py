@@ -69,7 +69,7 @@ class DrDoom(Mastermind):
     desc = ('Master Strike: Each player with exactly 6 card in hand reveals '
             '<Tec> or returns 2 cards from hand to deck.')
 
-    always_leads = villains.DoombotGroup
+    always_leads = villains.DoombotLegion
     power = 9
 
     def __init__(self, game):

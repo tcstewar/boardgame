@@ -33,7 +33,7 @@ class Villain(object):
         pass
     def text(self):
         name = '%40s' % self.name
-        group = self.group.name
+        group = self.group.name if self.group is not None else ''
         ev = '+' if self.extra_victory else ''
         return '%s <%s> [P%d V%d%s] %s' % (name, group,
                                            self.power,
@@ -43,10 +43,10 @@ class Villain(object):
 
 class VillainGroup(Group):
     pass
-class HenchmenGroup(Group):
-    pass
 class HeroGroup(Group):
     pass
+class Henchman(Villain):
+    group = None
 
 
 class Tactic(bg.Card):

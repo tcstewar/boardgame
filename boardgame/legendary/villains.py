@@ -1,6 +1,6 @@
 import boardgame as bg
 
-from .core import Villain, VillainGroup, HenchmenGroup, Hero
+from .core import Villain, VillainGroup, Henchman, Hero
 from . import action
 from . import tags
 
@@ -66,14 +66,8 @@ class HydraSupreme(Villain):
                 pts += 3
         return pts
 
-class SentinelGroup(HenchmenGroup):
+class Sentinel(Henchman):
     name = 'Sentinel'
-    def fill(self):
-        self.add(Sentinel, 10)
-
-class Sentinel(Villain):
-    name = 'Sentinel'
-    group = SentinelGroup
     power = 3
     victory = 1
     desc = 'Fight: KO one of your Heroes.'
@@ -210,14 +204,8 @@ class SuperSkrull(Villain):
         for p in self.game.players:
             p.ko_from(p.hand, p.played)
 
-class HandNinjaGroup(HenchmenGroup):
+class HandNinjas(Henchman):
     name = 'Hand Ninjas'
-    def fill(self):
-        self.add(HandNinjas, 10)
-
-class HandNinjas(Villain):
-    name = 'Hand Ninjas'
-    group = HandNinjaGroup
     power = 3
     victory = 1
     desc = 'Fight: You get S+1.'
@@ -292,14 +280,8 @@ class Ultron(Villain):
                 self.game.event('Ultron wounds Player %d' % (i + 1))
                 p.gain_wound()
 
-class DoombotGroup(HenchmenGroup):
+class DoombotLegion(Henchman):
     name = 'Doombot Legion'
-    def fill(self):
-        self.add(DoombotLegion, 10)
-
-class DoombotLegion(Villain):
-    name = 'Doombot Legion'
-    group = DoombotGroup
     power = 3
     victory = 1
     desc = ('Fight: Reveal the top 2 cards of your deck. '
