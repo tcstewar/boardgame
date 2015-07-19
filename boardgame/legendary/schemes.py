@@ -50,4 +50,3 @@ class WeaveAWebOfLies(Scheme):
         self.twists_done += 1
         if self.twists_done == 7:
             self.game.evil_wins()
-

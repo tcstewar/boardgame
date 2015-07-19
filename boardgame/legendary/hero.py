@@ -1,7 +1,7 @@
 import boardgame as bg
 
 import action
-from .core import Hero, HeroGroup, Bystander
+from .core import *
 from .tags import *
 
 class ShieldAgent(Hero):
@@ -338,7 +338,6 @@ class CyclopsUnited(Hero):
         count = player.count_played(tag=XMen, ignore=self)
         player.available_power += 2 * count
 
-
 class BlackWidow(HeroGroup):
     name = 'Black Widow'
     def fill(self):
@@ -419,3 +418,80 @@ class BlackWidowSniper(Hero):
                             kwargs=dict(villain=v)))
         if len(actions) > 0:
             self.game.choice(actions)
+
+class Hulk(HeroGroup):
+    name = 'Hulk'
+    def fill(self):
+        self.add(HulkUnstoppable, 5)
+        self.add(HulkSmash, 1)
+        self.add(HulkAnger, 5)
+        self.add(HulkRampage, 3)
+
+class HulkRampage(Hero):
+    name = 'Hulk: Crazed Rampage'
+    cost = 5
+    power = 4
+    tags = [Avenger, Strength]
+    desc = 'Each player gains a Wound'
+    def on_play(self, player):
+        for p in self.game.players:
+            self.game.event('Hulk wounds %s' % p.name)
+            p.gain_wound()
+
+class HulkAnger(Hero):
+    name = 'Hulk: Growing Anger'
+    cost = 3
+    power = 2
+    tags = [Avenger, Strength]
+    desc = '<Str> P+1'
+    def on_play(self, player):
+        if player.count_played(tag=Strength, ignore=self) > 0:
+            player.available_power += 1
+
+class HulkSmash(Hero):
+    name = 'Hulk: Smash'
+    cost = 8
+    power = 5
+    tags = [Avenger, Strength]
+    desc = '<Str> P+5'
+    def on_play(self, player):
+        if player.count_played(tag=Strength, ignore=self) > 0:
+            player.available_power += 5
+
+class HulkUnstoppable(Hero):
+    name = 'Hulk: Unstoppable'
+    cost = 4
+    power = 2
+    tags = [Avenger, Instinct]
+    desc = 'You may KO a Wound from your hand or discard. If you do, P+2.'
+    def on_play(self, player):
+        actions = []
+        for c in player.hand:
+            if isinstance(c, Wound):
+                actions.append(bg.CustomAction(
+                    'KO Wound from hand for P+2',
+                    func=self.on_ko_wound,
+                    kwargs=dict(player=player, card=c),
+                ))
+                break
+        for c in player.discard:
+            if isinstance(c, Wound):
+                actions.append(bg.CustomAction(
+                    'KO Wound from discard for P+2',
+                    func=self.on_ko_wound,
+                    kwargs=dict(player=player, card=c),
+                ))
+                break
+        if len(actions) > 0:
+            actions.append(action.DoNothing())
+            self.game.choice(actions)
+    def on_ko_wound(self, player, card):
+        if card in player.hand:
+            player.hand.remove(card)
+        elif card in player.discard:
+            player.discard.remove(card)
+        else:
+            #TODO: this should never happen with fixed action selection
+            return
+        self.game.ko.append(card)
+        player.available_power += 2

@@ -120,7 +120,11 @@ class Fight(bg.Action):
         if game.state is not DuringTurn:
             return False
         if (player.available_power >= game.mastermind.power):
-            return True
+            if hasattr(game.scheme, 'valid_fight_mastermind'):
+                if game.scheme.valid_fight_mastermind(player):
+                    return True
+            else:
+                return True
         cards = [h for h in game.city
                    if h is not None and
                       h.power <= player.available_power and
@@ -131,7 +135,11 @@ class Fight(bg.Action):
 
         if (player.available_power >=
                 game.mastermind.power):
-            actions.append(FightMastermind(game.mastermind))
+            if hasattr(game.scheme, 'valid_fight_mastermind'):
+                if game.scheme.valid_fight_mastermind(player):
+                    actions.append(FightMastermind(game.mastermind))
+            else:
+                actions.append(FightMastermind(game.mastermind))
         for h in game.city:
             if (h is not None and
                     h.power <= player.available_power and
