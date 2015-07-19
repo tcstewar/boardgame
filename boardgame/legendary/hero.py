@@ -270,7 +270,7 @@ class HawkeyeTrick(Hero):
             player.rescue_bystander()
             player.rescue_bystander()
             player.rescue_bystander()
-        player.handlers[player.on_fight].append(on_fight)
+        player.handlers['on_fight'].append(on_fight)
 
 
 class Cyclops(HeroGroup):

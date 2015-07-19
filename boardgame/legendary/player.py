@@ -28,7 +28,7 @@ class Player(object):
             self.gain(hero.ShieldTrooper(game))
         self.draw_new_hand()
         self.handlers = {}
-        self.handlers[self.on_fight] = []
+        self.handlers['on_fight'] = []
 
     def clear_handlers(self):
         for v in self.handlers.values():
@@ -101,7 +101,9 @@ class Player(object):
 
 
     def on_fight(self, enemy):
-        for x in self.handlers[on_fight]:
+        print 'fight', self.handlers['on_fight']
+        for x in self.handlers['on_fight']:
+            print 'handle', x
             x(enemy)
 
     def ko_from(self, *locations):
@@ -125,6 +127,10 @@ class Player(object):
 
         self.victory_pile.append(villain)
         villain.on_fight(self)
+        self.on_fight(villain)
+
+        if hasattr(self.game.scheme, 'on_defeat'):
+            self.game.scheme.on_defeat(villain, self)
 
 
 

@@ -72,13 +72,13 @@ class Mastermind(bg.Card):
 
 
 class Scheme(bg.Card):
-    def __init__(self, game, twists):
+    def __init__(self, game):
         super(Scheme, self).__init__(game)
-        game.add_twists(twists)
+        game.add_twists(self.twists)
         self.twists_done = 0
-        self.twists_total = twists
     def __str__(self):
-        return '%s (%d/%d)' % (self.name, self.twists_done, self.twists_total)
+        return '%s (%d/%d) %s' % (self.name, self.twists_done, self.twists,
+                                  self.desc)
 
 class SchemeTwist(bg.Card):
     def __str__(self):

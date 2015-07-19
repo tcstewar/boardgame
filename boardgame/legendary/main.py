@@ -34,6 +34,8 @@ if __name__ == '__main__':
                         help='Villain to use')
     parser.add_argument('--hero', default=None, type=str,
                         help='Hero to use')
+    parser.add_argument('--scheme', default=None, type=str,
+                        help='Evil scheme')
     args = parser.parse_args()
 
 
@@ -41,6 +43,7 @@ if __name__ == '__main__':
                                          n_players=args.players,
                                          mastermind=args.mastermind,
                                          hero=args.hero,
+                                         scheme=args.scheme,
                                          villain=args.villain)
 
     def selector(game, actions):

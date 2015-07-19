@@ -1,11 +1,14 @@
 import boardgame as bg
 
-from .core import Scheme
+from .core import *
+from . import action
 
 class UnleashCube(Scheme):
     name = 'Unleash the Power of the Cosmic Cube'
-    def __init__(self, game):
-        super(UnleashCube, self).__init__(game, twists=8)
+    twists = 8
+    desc = ('Twists 5, 6: All players gain Wound. '
+            'Twist 7: All players gain 3 Wounds. '
+            'Twist 8: Evil wins!')
     def twist(self):
         self.twists_done += 1
         if 5 <= self.twists_done <= 6:
@@ -17,3 +20,34 @@ class UnleashCube(Scheme):
                     p.gain_wound()
         elif self.twists_done == 8:
             self.game.evil_wins()
+
+class WeaveAWebOfLies(Scheme):
+    name = 'Weave a Web of Lies'
+    twists = 7
+    desc = ("Can't fight mastermind unless # Bystanders >= # twists done. "
+            "Defeat: [1S] to rescue bystander.")
+    def valid_fight_mastermind(self, player):
+        count = len([c for c in player.victory_pile
+                       if isinstance(c, Bystander)])
+        return count >= self.twists_done
+    def on_defeat(self, villain, player):
+        if (isinstance(villain, Villain) and
+                player.available_star >= 1 and
+                len(self.game.bystanders) > 0):
+            actions = [
+                bg.CustomAction('Rescue a Bystandar for [S1]',
+                    func=self.on_defeat_rescue,
+                    kwargs=dict(player=player)),
+                action.DoNothing(),
+                ]
+            self.game.choice(actions)
+    def on_defeat_rescue(self, player):
+        player.available_star -= 1
+        b = self.game.bystanders.pop()
+        player.victory_pile.append(b)
+
+    def twist(self):
+        self.twists_done += 1
+        if self.twists_done == 7:
+            self.game.evil_wins()
+

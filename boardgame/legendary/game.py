@@ -14,7 +14,7 @@ from .core import *
 
 class Legendary(bg.BoardGame):
     def reset(self, seed=None, n_players=2, mastermind=None, villain=None,
-                                            hero=None):
+                                            hero=None, scheme=None):
         super(Legendary, self).reset(seed=seed)
         self.villain = []
         self.city = [None, None, None, None, None]
@@ -51,6 +51,9 @@ class Legendary(bg.BoardGame):
         hs = dict(inspect.getmembers(hero_module,
             lambda x: inspect.isclass(x) and issubclass(x, HeroGroup) and
                        not x is HeroGroup))
+        ss = dict(inspect.getmembers(schemes,
+            lambda x: inspect.isclass(x) and issubclass(x, Scheme) and
+                       not x is Scheme))
 
         if mastermind is not None:
             self.mastermind = ms[mastermind](self)
@@ -119,7 +122,16 @@ class Legendary(bg.BoardGame):
             self.event('Henchman: %s' % cls.name)
 
 
-        self.scheme = schemes.UnleashCube(self)
+        if scheme is None:
+            cls = self.rng.choice(ss.values())
+        else:
+            if scheme in ss:
+                cls = ss[scheme]
+            else:
+                print 'Unknown Scheme "%s"' % scheme
+                print 'Known Schemes: %s' % ss.keys()
+                raise ValueError
+        self.scheme = cls(self)
 
         for i in range(5 if not solo else 1):
             self.villain.append(MasterStrike(self))
@@ -255,19 +267,23 @@ class Legendary(bg.BoardGame):
         lines.append('Hero Pile: %d' % len(self.hero))
         lines.append('----------------------------------------')
         for i, p in enumerate(self.players):
+            n_bystanders = len([b for b in p.victory_pile
+                                  if isinstance(b, Bystander)])
             if p is self.current_player:
-                lines.append('Player %d (current) [S%d P%d V%d]' % (i+1,
+                lines.append('Player %d (current) [S%d P%d V%d B%d]' % (i+1,
                                                       p.available_star,
                                                       p.available_power,
-                                                      p.victory_points()))
+                                                      p.victory_points(),
+                                                      n_bystanders))
                 for x in p.hand:
                     lines.append('  %s' % x.text())
                 for i in range(10-len(p.hand)):
                     lines.append('  ----------------')
             else:
                 hand = ', '.join(['%s' % x for x in p.hand])
-                lines.append('Player %d [V%d]: %s' % (i+1,
+                lines.append('Player %d [V%d B%d]: %s' % (i+1,
                                                       p.victory_points(),
+                                                      n_bystanders,
                                                       hand))
         lines.append('----------------------------------------')
         for event in self.recent_events:

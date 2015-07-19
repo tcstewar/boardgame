@@ -221,7 +221,7 @@ class ReturnFrom(bg.Action):
 
 class Play(bg.Action):
     def __str__(self):
-        return 'Play %s' % self.card
+        return 'Play %s' % self.card.text()
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
@@ -300,6 +300,9 @@ class FightMastermind(bg.Action):
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
+        if hasattr(game.scheme, 'valid_fight_mastermind'):
+            if not game.scheme.valid_fight_mastermind(player):
+                return False
         return player.available_power >= self.card.power
     def perform(self, game, player):
         player.has_fought = True
