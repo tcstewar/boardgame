@@ -17,6 +17,7 @@ class EndTurn(bg.Action):
     def perform(self, game, player):
         player.available_star = 0
         player.available_power = 0
+        player.used_star = 0
         player.has_fought = False
         player.has_recruited = False
         player.has_healed = False
@@ -25,6 +26,7 @@ class EndTurn(bg.Action):
         player.draw_new_hand()
         player.extra_draw_count = 0
         player.draw_target = 6
+        player.can_use_star_as_power = False
         player.clear_handlers()
         game.state = BeginTurn
         if player.take_another_turn:
@@ -121,7 +123,10 @@ class Fight(bg.Action):
             return False
         if game.state is not DuringTurn:
             return False
-        if (player.available_power >= game.mastermind.power):
+        power = player.available_power
+        if player.can_use_star_as_power:
+            power += player.available_star
+        if (power >= game.mastermind.power):
             if hasattr(game.scheme, 'valid_fight_mastermind'):
                 if game.scheme.valid_fight_mastermind(player):
                     return True
@@ -129,14 +134,17 @@ class Fight(bg.Action):
                 return True
         cards = [h for h in game.city
                    if h is not None and
-                      h.power <= player.available_power and
+                      h.power <= power and
                       h.can_fight(player)]
         return len(cards) > 0
     def perform(self, game, player):
         actions = []
 
-        if (player.available_power >=
-                game.mastermind.power):
+        power = player.available_power
+        if player.can_use_star_as_power:
+            power += player.available_star
+
+        if (power >= game.mastermind.power):
             if hasattr(game.scheme, 'valid_fight_mastermind'):
                 if game.scheme.valid_fight_mastermind(player):
                     actions.append(FightMastermind(game.mastermind))
@@ -144,7 +152,7 @@ class Fight(bg.Action):
                 actions.append(FightMastermind(game.mastermind))
         for h in game.city:
             if (h is not None and
-                    h.power <= player.available_power and
+                    h.power <= power and
                     h.can_fight(player)):
                 actions.append(FightVillain(h))
         game.choice(actions)
@@ -259,6 +267,7 @@ class RecruitHero(bg.Action):
         player.has_recruited = True
         player.gain(self.card)
         player.available_star -= self.card.cost
+        player.used_star += self.card.cost
         if self.card in game.hq:
             index = game.hq.index(self.card)
             game.hq[index] = None
@@ -274,18 +283,35 @@ class GainCard(bg.Action):
     def perform(self, game, player):
         self.game.current_player.gain(self.card)
 
+class UseStar(bg.Action):
+    def __str__(self):
+        return 'Use %d Star as Power' % self.star
+    def __init__(self, star):
+        self.star = star
+    def perform(self, game, player):
+        player.available_star -= self.star
+
 class FightVillain(bg.Action):
     def __str__(self):
         return 'Fight %s' % self.card
     def __init__(self, card):
         self.card = card
     def valid(self, game, player):
-        return (player.available_power >= self.card.power and
+        power = player.available_power
+        if player.can_use_star_as_power:
+            power += player.available_star
+        return (power >= self.card.power and
                 self.card.can_fight(player))
     def perform(self, game, player):
+        if player.can_use_star_as_power:
+            minimum = self.card.power - player.available_power
+            maximum = self.card.power
+            star = player.choose_star_usage(minimum, maximum)
+        else:
+            star = 0
         self.card.on_pre_fight(player)
         player.has_fought = True
-        player.available_power -= self.card.power
+        player.available_power -= (self.card.power - star)
         player.defeat(self.card)
 
 
@@ -298,8 +324,18 @@ class FightMastermind(bg.Action):
         if hasattr(game.scheme, 'valid_fight_mastermind'):
             if not game.scheme.valid_fight_mastermind(player):
                 return False
-        return player.available_power >= self.card.power
+        power = player.available_power
+        if player.can_use_star_as_power:
+            power += player.available_star
+        return power >= self.card.power
     def perform(self, game, player):
+        if player.can_use_star_as_power:
+            minimum = self.card.power - player.available_power
+            maximum = self.card.power
+            star = player.choose_star_usage(minimum, maximum)
+        else:
+            star = 0
+
         player.has_fought = True
-        player.available_power -= self.card.power
+        player.available_power -= (self.card.power - star)
         player.defeat(self.card)

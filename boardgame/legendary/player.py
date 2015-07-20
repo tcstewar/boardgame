@@ -15,11 +15,13 @@ class Player(object):
         self.victory_pile = []
         self.available_power = 0
         self.available_star = 0
+        self.used_star = 0
         self.has_fought = False
         self.has_recruited = False
         self.has_healed = False
         self.extra_draw_count = 0
         self.take_another_turn = False
+        self.can_use_star_as_power = False
         self.draw_target = 6
         self.draw_hand_extra = 0
         for i in range(8):
@@ -39,7 +41,13 @@ class Player(object):
         del self.hand[:]
 
     def discard_played(self):
-        self.discard.extend(self.played)
+        for c in self.played:
+            if c.is_copy:
+                if c.original is not None:
+                    self.discard.append(c.original)
+            else:
+                self.discard.append(c)
+
         del self.played[:]
 
     def draw_new_hand(self):
@@ -66,17 +74,21 @@ class Player(object):
             self.game.event('Reveal %s' % c)
         return cards
 
-    def draw(self, count):
+    def draw(self, count, put_in_hand=True):
+        cards = []
         for i in range(count):
             if len(self.stack) == 0:
                 self.stack.extend(self.game.rng.permutation(self.discard))
                 del self.discard[:]
             if len(self.stack) > 0:
                 self.extra_draw_count += 1
-                self.hand.append(self.stack.pop(0))
+                cards.append(self.stack.pop(0))
             else:
                 self.game.event('%s tries to draw but has no cards' %
                                 self.name)
+        if put_in_hand:
+            self.hand.extend(cards)
+        return cards
 
     def count_played(self, tag, ignore=None):
         return len(self.get_played(tag=tag, ignore=ignore))
@@ -96,6 +108,12 @@ class Player(object):
         self.available_star += card.star
         self.played.append(card)
         self.hand.remove(card)
+        card.on_play(self)
+
+    def play(self, card):
+        self.available_power += card.power
+        self.available_star += card.star
+        self.played.append(card)
         card.on_play(self)
 
     def rescue_bystander(self):
@@ -139,6 +157,22 @@ class Player(object):
 
         if hasattr(self.game.scheme, 'on_defeat'):
             self.game.scheme.on_defeat(villain, self)
+
+
+    def choose_star_usage(self, minimum, maximum):
+        minimum = max(minimum, 0)
+        maximum = min(maximum, self.available_star)
+
+        if maximum == minimum:
+            return maximum
+
+        assert maximum > minimum
+
+        actions = []
+        for i in reversed(range(minimum, maximum + 1)):
+            actions.append(action.UseStar(i))
+        choice = self.game.choice(actions)
+        return choice.star
 
 
 

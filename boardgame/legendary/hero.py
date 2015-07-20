@@ -1,3 +1,5 @@
+import copy
+
 import boardgame as bg
 
 import action
@@ -518,7 +520,7 @@ class WolverineSenses(Hero):
     tags = [XMen, Instinct]
     desc = '<Ins> Draw a card'
     def on_play(self, player):
-        if player.count_played(tag=Instinct, ignore=self):
+        if player.count_played(tag=Instinct, ignore=self) > 0:
             player.draw(1)
 
 class CaptainAmerica(HeroGroup):
@@ -584,3 +586,143 @@ class CapTeamwork(Hero):
                 if tag in c.tags:
                     player.available_power +=1
                     break
+
+class Thor(HeroGroup):
+    name = 'Thor'
+    def fill(self):
+        self.add(ThorPower, 5)
+        self.add(ThorOdinson, 5)
+        self.add(ThorThunder, 1)
+        self.add(ThorLightning, 3)
+
+class ThorLightning(Hero):
+    name = 'Thor: Call Lightning'
+    cost = 6
+    power = 3
+    extra_power = True
+    tags = [Avenger, Ranged]
+    desc = '<Rng> P+3'
+    def on_play(self, player):
+        if player.count_played(tag=Ranged, ignore=self) > 0:
+            player.available_power += 3
+
+class ThorOdinson(Hero):
+    name = 'Thor: Odinson'
+    cost = 3
+    star = 2
+    extra_star = True
+    tags = [Avenger, Strength]
+    desc = '<Str> S+2'
+    def on_play(self, player):
+        if player.count_played(tag=Strength, ignore=self) > 0:
+            player.available_star += 2
+
+class ThorPower(Hero):
+    name = 'Thor: Surge of Power'
+    cost = 4
+    star = 2
+    extra_star = True
+    tags = [Avenger, Ranged]
+    desc = 'If you made 8 or more S, P+3'
+    def on_play(self, player):
+        if player.available_star + player.used_star >= 8:
+            player.available_power += 3
+
+class ThorThunder(Hero):
+    name = 'Thor: God of Thunder'
+    cost = 8
+    star = 5
+    extra_power = True
+    tags = [Avenger, Ranged]
+    desc = 'You can use S as P this turn'
+    def on_play(self, player):
+        player.can_use_star_as_power = True
+
+class Rogue(HeroGroup):
+    name = 'Rogue'
+    def fill(self):
+        self.add(RogueBrawn, 5)
+        self.add(RogueEnergy, 5)
+        self.add(RogueSteal, 1)
+        self.add(RogueCopy, 3)
+
+class RogueBrawn(Hero):
+    name = 'Rogue: Stolen Brawn'
+    cost = 4
+    power = 1
+    extra_power = True
+    tags = [XMen, Strength]
+    desc = '<Str>: P+3'
+    def on_play(self, player):
+        if player.count_played(tag=Strength, ignore=self):
+            player.available_power += 3
+
+class RogueSteal(Hero):
+    name = 'Rogue: Steal Abilities'
+    cost = 8
+    power = 4
+    tags = [XMen, Strength]
+    desc = ('Each player discards the top card of their deck. '
+            'Play a copy of each card.')
+    def on_play(self, player):
+        for p in self.game.players:
+            cards = p.draw(1, put_in_hand=False)
+            if len(cards) > 0:
+                card = cards[0]
+                p.discard.append(card)
+
+                self.game.event('Rogue steals: %s' % card.text())
+                copied = card.copy()
+                try:
+                    player.play(copied)
+                except bg.NoValidActionException:
+                    self.game.event("Rogue's copy of %s skipped requirements")
+
+class RogueCopy(Hero):
+    name = 'Rogue: Copy Powers'
+    cost = 5
+    tags = [XMen, Covert]
+    desc = ('Play this as a copy of another Hero you played this turn. '
+            'This card <Cov> in addition')
+    def valid_play(self, player):
+        for c in player.played:
+            if not hasattr(c, 'valid_play') or c.valid_play(player):
+                return True
+        return False
+
+    def on_play(self, player):
+        player.played.remove(self)
+        actions = []
+        for c in player.played:
+            if not hasattr(c, 'valid_play') or c.valid_play(player):
+                actions.append(bg.CustomAction(
+                    'Copy %s' % c.text(),
+                    func=self.on_copy,
+                    kwargs=dict(player=player, card=c)))
+        self.game.choice(actions)
+
+    def on_copy(self, player, card):
+        copied = card.copy()
+        if Covert not in copied.tags:
+            copied.tags = [Covert] + copied.tags
+        copied.original = self
+        player.play(copied)
+
+class RogueEnergy(Hero):
+    name = 'Rogue: Energy Drain'
+    cost = 3
+    star = 2
+    extra_star = True
+    tags = [XMen, Covert]
+    desc = '<Cov>: You may KO a card from hand or discard. If you do, S+1.'
+    def on_play(self, player):
+        if player.count_played(tag=Covert, ignore=self):
+            actions = []
+            for c in player.hand:
+                actions.append(action.KOFrom(c, player.hand))
+            for c in player.discard:
+                actions.append(action.KOFrom(c, player.discard))
+            if len(actions) > 0:
+                choice = self.game.choice(actions, allow_do_nothing=True)
+                if choice is not None:
+                    player.available_star += 1

@@ -11,7 +11,7 @@ class Group(object):
             c.group = self.__class__
             self.group.append(c)
 
-class Villain(object):
+class Villain(bg.Card):
     power = 0
     victory = 0
     extra_victory = None
@@ -147,4 +147,6 @@ class Wound(bg.Card):
         return 'Wound'
     def text(self):
         return 'Wound'
+    def on_play(self, player):
+        pass
 
