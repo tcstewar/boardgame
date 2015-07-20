@@ -561,9 +561,6 @@ class CapBlock(Hero):
     power = 4
     tags = [Avenger, Tech]
     desc = 'If you would gain a Wound, reveal this and draw a card instead'
-    def on_play(self, player):
-        count = player.count_played(tag=Avenger, ignore=self)
-        player.available_power += count * 3
     def allow_wound(self, player):
         choice = self.game.choice([
             bg.CustomAction('Have Captain America block the Wound')
