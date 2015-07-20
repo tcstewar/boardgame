@@ -36,7 +36,7 @@ class IronManArc(Hero):
     extra_power = True
     desc = 'P+1 per other <Tec> played'
     def on_play(self, player):
-        player.available_power += player.count_played(tag=Tech)
+        player.available_power += player.count_played(tag=Tech, ignore=self)
 
 class IronManEndless(Hero):
     name = 'Iron Man: Endless Intervention'
@@ -425,6 +425,7 @@ class HulkAnger(Hero):
     name = 'Hulk: Growing Anger'
     cost = 3
     power = 2
+    extra_power = True
     tags = [Avenger, Strength]
     desc = '<Str> P+1'
     def on_play(self, player):
@@ -435,6 +436,7 @@ class HulkSmash(Hero):
     name = 'Hulk: Smash'
     cost = 8
     power = 5
+    extra_power = True
     tags = [Avenger, Strength]
     desc = '<Str> P+5'
     def on_play(self, player):

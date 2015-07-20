@@ -220,4 +220,4 @@ class LokiTactic4(Tactic):
                     func=player.defeat,
                     kwargs=dict(villain=c)))
         if len(actions) > 0:
-            self.game.choice(actions)
+            self.game.choice(actions, allow_do_nothing=True)

@@ -26,7 +26,7 @@ if __name__ == '__main__':
     import boardgame.legendary
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--players', default=2, type=int,
+    parser.add_argument('-p', '--players', default=1, type=int,
                         help='number of players')
     parser.add_argument('-s', '--seed', default=None, type=int,
                         help='game seed')

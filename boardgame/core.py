@@ -53,7 +53,6 @@ class BoardGame(object):
         self.seed = seed
         self.rng = np.random.RandomState(seed=seed)
         self.player_index = 0
-        self.finished = False
         self.events = []
         self.recent_events = []
         self.players = []
@@ -97,6 +96,9 @@ class BoardGame(object):
 
             if len(self.forced_choices) > 0:
                 choice = self.forced_choices.pop(0)
+                if choice >= len(valid):
+                    print 'Error loading file'
+                    choice = self.selector(self, valid)
             else:
                 choice = self.selector(self, valid)
             self.choices.append(choice)
@@ -106,9 +108,6 @@ class BoardGame(object):
 
             action = valid[choice]
             action.perform(self, p)
-
-            if self.finished:
-                raise FinishedException()
 
             if repeat is False or repeat == 0:
                 if isinstance(action, DoNothing):

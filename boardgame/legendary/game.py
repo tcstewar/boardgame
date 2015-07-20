@@ -299,11 +299,11 @@ class Legendary(bg.BoardGame):
         return '\n'.join(lines)
 
     def evil_wins(self):
-        #print 'evil wins'
-        self.finished = True
+        self.event('Evil Wins!')
+        raise bg.FinishedException()
     def good_wins(self):
-        #print 'good wins'
-        self.finished = True
+        self.event('Good Wins!')
+        raise bg.FinishedException()
     def tie_game(self):
-        #print 'tie game'
-        self.finished = True
+        self.event('Ties game!')
+        raise bg.FinishedException()
