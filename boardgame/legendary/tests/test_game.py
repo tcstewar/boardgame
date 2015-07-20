@@ -21,8 +21,8 @@ def test_game_first():
             try:
                 game.run(rand.selector)
             except:
+                rand = boardgame.testing.FirstPlay(save='autosave.sav')
                 game.reset(seed=seed, n_players=p)
-                game.run(rand.selector, steps=rand.n_choices - 1)
-                game.save('autosave.sav')
+                game.run(rand.selector)
                 raise
 

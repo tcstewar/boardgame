@@ -79,8 +79,12 @@ class PlayAll(bg.Action):
             return len(cards) > 0
         return False
     def perform(self, game, player):
+
+
         for h in player.hand[:]:
-            if isinstance(h, Hero) and not hasattr(h, 'valid_play'):
+            if (isinstance(h, Hero) and
+                     not hasattr(h, 'valid_play') and
+                     h in player.hand):
                 player.play_from_hand(h)
 
 class Recruit(bg.Action):

@@ -28,16 +28,6 @@ class Legendary(bg.BoardGame):
         self.players = [Player(self, name='Player %d' % (i+1))
                         for i in range(n_players)]
 
-        self.state = BeginTurn
-        self.choice([action.StartTurn(),
-                     action.PlayAll(),
-                     action.PlayFromHand(),
-                     action.Heal(),
-                     action.Recruit(),
-                     action.Fight(),
-                     action.EndTurn(),
-                    ],
-                    repeat=True)
 
         ms = dict(inspect.getmembers(masterminds,
             lambda x: inspect.isclass(x) and issubclass(x, Mastermind) and
@@ -164,6 +154,19 @@ class Legendary(bg.BoardGame):
     def add_twists(self, count):
         for i in range(count):
             self.villain.append(SchemeTwist(self))
+
+    def start(self):
+        self.state = BeginTurn
+        self.choice([action.StartTurn(),
+                     action.PlayAll(),
+                     action.PlayFromHand(),
+                     action.Heal(),
+                     action.Recruit(),
+                     action.Fight(),
+                     action.EndTurn(),
+                    ],
+                    repeat=True)
+
 
     def play_villain(self):
         if len(self.villain) == 0:

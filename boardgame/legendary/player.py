@@ -90,9 +90,9 @@ class Player(object):
     def play_from_hand(self, card):
         self.available_power += card.power
         self.available_star += card.star
-        card.on_play(self)
         self.played.append(card)
         self.hand.remove(card)
+        card.on_play(self)
 
     def rescue_bystander(self):
         if len(self.game.bystanders) > 0:
@@ -101,9 +101,7 @@ class Player(object):
 
 
     def on_fight(self, enemy):
-        print 'fight', self.handlers['on_fight']
         for x in self.handlers['on_fight']:
-            print 'handle', x
             x(enemy)
 
     def ko_from(self, *locations):

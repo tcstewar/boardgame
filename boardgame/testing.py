@@ -10,8 +10,11 @@ class RandomPlay(object):
         return c
 
 class FirstPlay(object):
-    def __init__(self):
+    def __init__(self, save=None):
         self.n_choices = 0
+        self.save = save
     def selector(self, game, actions):
         self.n_choices += 1
+        if self.save is not None:
+            game.save(self.save)
         return 0

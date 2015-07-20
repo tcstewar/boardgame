@@ -297,7 +297,6 @@ class CyclopsDetermination(Hero):
         for h in player.hand:
             if h is not self:
                 actions.append(action.DiscardFrom(h, player.hand))
-        #TODO: ensure at least one of these actions is chosen!
         self.game.choice(actions)
 
 class CyclopsOptic(Hero):
@@ -316,7 +315,6 @@ class CyclopsOptic(Hero):
         for h in player.hand:
             if h is not self:
                 actions.append(action.DiscardFrom(h, player.hand))
-        #TODO: ensure at least one of these actions is chosen!
         self.game.choice(actions)
 
 class CyclopsEnergy(Hero):
@@ -381,12 +379,9 @@ class BlackWidowRescue(Hero):
     def on_ko_rescue(self, card, player):
         if card in player.hand:
             player.hand.remove(card)
-        elif card in player.discard:
-            player.discard.remove(card)
         else:
-            #TODO: if action selection is done immediately, this should
-            # never happen!
-            return
+            assert card in player.discard
+            player.discard.remove(card)
         self.game.ko.append(card)
         player.rescue_bystander()
 
@@ -488,10 +483,8 @@ class HulkUnstoppable(Hero):
     def on_ko_wound(self, player, card):
         if card in player.hand:
             player.hand.remove(card)
-        elif card in player.discard:
-            player.discard.remove(card)
         else:
-            #TODO: this should never happen with fixed action selection
-            return
+            assert card in player.discard
+            player.discard.remove(card)
         self.game.ko.append(card)
         player.available_power += 2

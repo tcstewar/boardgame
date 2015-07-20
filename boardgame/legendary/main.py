@@ -1,5 +1,7 @@
 import argparse
 
+import boardgame as bg
+
 
 def text_choice(game, actions):
     while True:
@@ -9,9 +11,9 @@ def text_choice(game, actions):
             print '----------------'
         s = raw_input('Choose: ')
         if s == 'u':
-            return 'undo'
+            raise bg.UndoException()
         elif s == 'l':
-            return 'load autosave.sav'
+            raise bg.LoadException('autosave.sav')
         try:
             value = int(s) - 1
             if 0 <= value < len(actions):
