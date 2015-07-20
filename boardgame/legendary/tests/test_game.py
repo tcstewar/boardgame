@@ -14,7 +14,7 @@ def test_game_random():
 
 def test_game_first():
     for p in range(2, 6):
-        for i in range(1000):
+        for i in range(300):
             seed = i + 30 * p
             game = Legendary(seed=seed, n_players=p)
             rand = boardgame.testing.FirstPlay()

@@ -143,8 +143,8 @@ class SpiderManWeb(Hero):
             else:
                 player.stack.insert(0, c)
 
-class Wolverine(HeroGroup):
-    name = 'Wolverine'
+class Wolverine2(HeroGroup):
+    name = 'Wolverine (X-Force)'
     def fill(self):
         self.add(WolverineAmbush, 5)
         self.add(WolverineAnimal, 5)
@@ -155,7 +155,7 @@ class WolverineAmbush(Hero):
     name = 'Wolverine: Sudden Ambush'
     cost = 4
     power = 2
-    tags = [XMen, Covert]
+    tags = [XForce, Covert]
     desc = 'If you drew any extra cards this turn, P+2'
     extra_power = True
     def on_play(self, player):
@@ -165,7 +165,7 @@ class WolverineAmbush(Hero):
 class WolverineAnimal(Hero):
     name = 'Wolverine: Animal Instincts'
     cost = 2
-    tags = [XMen, Instinct]
+    tags = [XForce, Instinct]
     desc = 'Draw a card. <Ins>: P+2'
     extra_power = True
     def on_play(self, player):
@@ -176,7 +176,7 @@ class WolverineAnimal(Hero):
 class WolverineReckless(Hero):
     name = 'Wolverine: Reckless Abandon'
     cost = 7
-    tags = [XMen, Covert]
+    tags = [XForce, Covert]
     power = 3
     desc = 'Count how many extra cards you have drawn. Draw that many cards.'
     def on_play(self, player):
@@ -186,7 +186,7 @@ class WolverineReckless(Hero):
 class WolverineNoMercy(Hero):
     name = 'Wolverine: No Mercy'
     cost = 4
-    tags = [XMen, Strength]
+    tags = [XForce, Strength]
     desc = 'Draw a card. You may KO a card from your hand or discard pile.'
     def on_play(self, player):
         player.draw(1)
@@ -462,3 +462,61 @@ class HulkUnstoppable(Hero):
         choice = self.game.choice(actions, allow_do_nothing=True)
         if choice is not None:
             player.available_power += 2
+
+class Wolverine(HeroGroup):
+    name = 'Wolverine'
+    def fill(self):
+        self.add(WolverineSenses, 5)
+        self.add(WolverineHealing, 5)
+        self.add(WolverineSlashing, 3)
+        self.add(WolverineRage, 1)
+
+class WolverineRage(Hero):
+    name = 'Wolverine: Berserker Rage'
+    cost = 8
+    power = 2
+    tags = [XMen, Instinct]
+    desc = 'Draw 3 cards.  <Ins> You get P+1 for each extra card drawn'
+    extra_power = True
+    def on_play(self, player):
+        player.draw(3)
+        player.available_power += player.extra_draw_count
+
+class WolverineSlashing(Hero):
+    name = 'Wolverine: Frenzied Slashing'
+    cost = 5
+    power = 2
+    tags = [XMen, Instinct]
+    desc = '<Ins> Draw 2 cards'
+    def on_play(self, player):
+        if player.count_played(tag=Instinct, ignore=self):
+            player.draw(2)
+
+class WolverineHealing(Hero):
+    name = 'Wolverine: Healing Factor'
+    cost = 3
+    power = 2
+    tags = [XMen, Instinct]
+    desc = 'You may KO a Wound from hand or discard. If you do, draw a card.'
+    def on_play(self, player):
+        actions = []
+        for c in player.hand:
+            if isinstance(c, Wound):
+                actions.append(action.KOFrom(c, player.hand))
+        for c in player.discard:
+            if isinstance(c, Wound):
+                actions.append(action.KOFrom(c, player.discard))
+        if len(actions) > 0:
+            choice = self.game.choice(actions, allow_do_nothing=True)
+            if choice is not None:
+                player.draw(1)
+
+class WolverineSenses(Hero):
+    name = 'Wolverine: Keen Senses'
+    cost = 2
+    power = 1
+    tags = [XMen, Instinct]
+    desc = '<Ins> Draw a card'
+    def on_play(self, player):
+        if player.count_played(tag=Instinct, ignore=self):
+            player.draw(1)
