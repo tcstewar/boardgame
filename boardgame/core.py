@@ -110,12 +110,12 @@ class BoardGame(object):
             if self.finished:
                 raise FinishedException()
 
-            if not repeat:
+            if repeat is False or repeat == 0:
                 if isinstance(action, DoNothing):
                     return None
                 else:
                     return action
-            if isinstance(repeat, int):
+            if repeat is not True:
                 repeat -= 1
 
             if not allow_same_type:
@@ -134,6 +134,7 @@ class BoardGame(object):
         while True:
             try:
                 self.start()
+                return
             except UndoException:
                 choices = self.choices[:-1]
                 self.reset(seed=self.seed, *self.args, **self.kwargs)

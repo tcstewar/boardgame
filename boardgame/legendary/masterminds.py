@@ -61,7 +61,9 @@ class RedSkullTactic4(Tactic):
         for act in [action.KOFrom, action.DiscardFrom, action.ReturnFrom]:
             for card in cards:
                 actions.append(act(card, cards))
-        self.game.choice(actions, repeat=True, allow_same_type=False)
+        if len(cards) > 0:
+            repeat = len(cards) - 1
+            self.game.choice(actions, repeat=repeat, allow_same_type=False)
 
 
 class DrDoom(Mastermind):
@@ -189,7 +191,8 @@ class LokiTactic2(Tactic):
             for c in p.victory_pile:
                 if isinstance(c, Villain):
                     actions.append(action.KOFrom(c, p.victory_pile))
-            self.game.choice(actions)
+            if len(actions) > 0:
+                self.game.choice(actions)
 
 class LokiTactic3(Tactic):
     name = 'Maniacal Tyrant'
@@ -216,4 +219,5 @@ class LokiTactic4(Tactic):
                     'Defeat %s' % c.text(),
                     func=player.defeat,
                     kwargs=dict(villain=c)))
-        self.game.choice(actions)
+        if len(actions) > 0:
+            self.game.choice(actions)

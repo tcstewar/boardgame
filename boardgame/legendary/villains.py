@@ -163,11 +163,17 @@ class SkrullQueen(Villain):
         self.stolen_hero = self.game.hq[index]
         self.game.hq[index] = None
         self.game.fill_hq()
-        self.power = self.stolen_hero.cost
-        self.game.event('Skrull Queen Veranke captures %s' % self.stolen_hero)
+        if self.stolen_hero is not None:
+            self.power = self.stolen_hero.cost
+            self.game.event('Skrull Queen Veranke captures %s' %
+                            self.stolen_hero)
+        else:
+            self.power = 0
     def on_fight(self, player):
-        self.game.event('Gained %s' % self.stolen_hero)
-        player.discard.append(self.stolen_hero)
+        if self.stolen_hero is not None:
+            self.game.event('Gained %s' % self.stolen_hero)
+            player.discard.append(self.stolen_hero)
+            self.stolen_hero = None
 
 class SkrullShapeshifter(Villain):
     power = None
