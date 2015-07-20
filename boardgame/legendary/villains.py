@@ -144,11 +144,13 @@ class PowerSkrull(Villain):
     victory = 3
     def on_fight(self, player):
         heroes = [h for h in self.game.hq if isinstance(h, Hero)]
-        actions = []
         for p in self.game.players:
+            actions = []
             for h in heroes:
-                actions.append(action.GainFrom(h, self.game.hq, player=p))
-            self.game.choice(actions)
+                if h in self.game.hq:
+                    actions.append(action.GainFrom(h, self.game.hq, player=p))
+            if len(actions) > 0:
+                self.game.choice(actions)
 
 class SkrullQueen(Villain):
     power = None

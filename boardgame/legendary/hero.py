@@ -520,3 +520,70 @@ class WolverineSenses(Hero):
     def on_play(self, player):
         if player.count_played(tag=Instinct, ignore=self):
             player.draw(1)
+
+class CaptainAmerica(HeroGroup):
+    name = 'Captain America'
+    def fill(self):
+        self.add(CapTeamwork, 5)
+        self.add(CapBlock, 3)
+        self.add(CapDay, 1)
+        self.add(CapAssemble, 5)
+
+class CapAssemble(Hero):
+    name = 'Captain America: Avengers Assemble'
+    cost = 3
+    star = 0
+    extra_star = True
+    tags = [Avenger, Instinct]
+    desc = 'S+1 for each color of Hero you have'
+    def on_play(self, player):
+        cards = player.hand + player.played
+        for tag in [Tech, Ranged, Strength, Instinct, Covert, Shield]:
+            for c in cards:
+                if tag in c.tags:
+                    player.available_star +=1
+                    break
+
+class CapDay(Hero):
+    name = 'Captain America: A Day Unlike Any Other'
+    cost = 7
+    power = 3
+    extra_power = True
+    tags = [Avenger, Covert]
+    desc = '<Avg> P+3 for every other Avg played'
+    def on_play(self, player):
+        count = player.count_played(tag=Avenger, ignore=self)
+        player.available_power += count * 3
+
+class CapBlock(Hero):
+    name = 'Captain America: Diving Block'
+    cost = 6
+    power = 4
+    tags = [Avenger, Tech]
+    desc = 'If you would gain a Wound, reveal this and draw a card instead'
+    def on_play(self, player):
+        count = player.count_played(tag=Avenger, ignore=self)
+        player.available_power += count * 3
+    def allow_wound(self, player):
+        choice = self.game.choice([
+            bg.CustomAction('Have Captain America block the Wound')
+            ], allow_do_nothing=True)
+        if choice is not None:
+            player.draw(1)
+            return False
+        else:
+            return True
+
+class CapTeamwork(Hero):
+    name = 'Captain America: Perfect Teamwork'
+    cost = 4
+    extra_power = True
+    tags = [Avenger, Strength]
+    desc = 'P+1 for each color of Hero you have'
+    def on_play(self, player):
+        cards = player.hand + player.played
+        for tag in [Tech, Ranged, Strength, Instinct, Covert, Shield]:
+            for c in cards:
+                if tag in c.tags:
+                    player.available_power +=1
+                    break

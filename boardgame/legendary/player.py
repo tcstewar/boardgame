@@ -51,6 +51,10 @@ class Player(object):
 
     def gain_wound(self):
         if len(self.game.wounds) > 0:
+            for c in self.hand + self.played:
+                if hasattr(c, 'allow_wound'):
+                    if not c.allow_wound(self):
+                        return
             self.gain(self.game.wounds.pop(0))
 
     def reveal(self, count):
@@ -120,8 +124,11 @@ class Player(object):
         del villain.captured[:]
 
         if villain is self.game.mastermind:
+            m = villain
             villain = villain.tactics.pop(0)
             self.game.event('Mastermind Tactic: %s' % villain.text())
+            if len(m.tactics) == 0:
+                self.game.good_wins()
         elif villain in self.game.city:
             index = self.game.city.index(villain)
             self.game.city[index] = None

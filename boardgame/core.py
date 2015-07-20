@@ -10,7 +10,7 @@ class Action(object):
         return self.name
 
 class CustomAction(Action):
-    def __init__(self, name, func, valid=None, args=(), kwargs={}):
+    def __init__(self, name, func=None, valid=None, args=(), kwargs={}):
         self.name = name
         self.func = func
         self.args = args
@@ -21,7 +21,8 @@ class CustomAction(Action):
             return self.valid_func(game, player)
         return True
     def perform(self, game, player):
-        self.func(*self.args, **self.kwargs)
+        if self.func is not None:
+            self.func(*self.args, **self.kwargs)
 
 class DoNothing(Action):
     def __str__(self):
