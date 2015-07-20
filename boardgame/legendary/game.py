@@ -229,14 +229,16 @@ class Legendary(bg.BoardGame):
         for c in self.hq:
             if c is not None and c.cost <= 6:
                 actions.append(action.KOFromHQ(c))
-        self.choice(actions)
+        if len(actions) > 0:
+            self.choice(actions)
 
         if len(card.captured) > 0:
             for p in self.players:
                 actions = []
                 for c in p.hand:
                     actions.append(action.DiscardFrom(c, p.hand))
-                self.choice(actions)
+                if len(actions) > 0:
+                    self.choice(actions)
 
 
 
@@ -297,11 +299,11 @@ class Legendary(bg.BoardGame):
         return '\n'.join(lines)
 
     def evil_wins(self):
-        print 'evil wins'
+        #print 'evil wins'
         self.finished = True
     def good_wins(self):
-        print 'good wins'
+        #print 'good wins'
         self.finished = True
     def tie_game(self):
-        print 'tie game'
+        #print 'tie game'
         self.finished = True

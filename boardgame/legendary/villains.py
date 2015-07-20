@@ -23,8 +23,8 @@ class HydraKidnappers(Villain):
             actions = [action.GainFrom(self.game.officers[0],
                                        self.game.officers
                                        ),
-                       action.DoNothing()]
-        self.game.choice(actions)
+                       ]
+        self.game.choice(actions, allow_do_nothing=True)
 
 class HydraArmies(Villain):
     power = 4
@@ -72,7 +72,7 @@ class Sentinel(Henchman):
     victory = 1
     desc = 'Fight: KO one of your Heroes.'
     def on_fight(self, player):
-        player.ko_from(player.hand, player.played)
+        player.ko_hero_from(player.hand, player.played)
 
 class SpiderFoes(VillainGroup):
     name = 'Spider Foes'
@@ -202,7 +202,8 @@ class SuperSkrull(Villain):
     desc = 'Fight: Each player KOs one of their Heroes.'
     def on_fight(self, player):
         for p in self.game.players:
-            p.ko_from(p.hand, p.played)
+            if len(p.hand + p.played) > 0:
+                p.ko_hero_from(p.hand, p.played)
 
 class HandNinjas(Henchman):
     name = 'Hand Ninjas'
@@ -255,8 +256,8 @@ class Whirlwind(Villain):
     desc = 'Fight: If you fight on the Rooftops or Bridge, KO two heros.'
     def on_pre_fight(self, player):
         if self is self.game.city[0] or self is self.game.city[2]:
-            player.ko_from(player.hand, player.played)
-            player.ko_from(player.hand, player.played)
+            player.ko_hero_from(player.hand, player.played)
+            player.ko_hero_from(player.hand, player.played)
 
 class Ultron(Villain):
     name = 'Ultron'
@@ -290,12 +291,14 @@ class DoombotLegion(Henchman):
         index = len(player.hand)
         player.draw(2)
         cards = player.hand[index:]
-        player.hand = player.hand[:index]
-        actions = []
-        for act in [action.KOFrom, action.ReturnFrom]:
-            for card in cards:
-                actions.append(act(card, cards))
-        self.game.choice(actions, repeat=True, allow_same_type=False)
+        if len(cards) > 0:
+            player.hand = player.hand[:index]
+            actions = []
+            for act in [action.KOFrom, action.ReturnFrom]:
+                for card in cards:
+                    actions.append(act(card, cards))
+            repeat = len(cards) - 1
+            self.game.choice(actions, repeat=repeat, allow_same_type=False)
 
 
 class SavageLandMutates(Henchman):
@@ -335,8 +338,8 @@ class Destroyer(Villain):
                 self.game.event('Destroyer KOs %s' % c)
     def on_escape(self):
         for p in self.game.players:
-            p.ko_from(p.hand, p.played)
-            p.ko_from(p.hand, p.played)
+            p.ko_hero_from(p.hand, p.played)
+            p.ko_hero_from(p.hand, p.played)
 
 class Ymir(Villain):
     name = 'Ymir, Frost Giant King'

@@ -195,8 +195,7 @@ class WolverineNoMercy(Hero):
             actions.append(action.KOFrom(c, player.hand))
         for c in player.discard:
             actions.append(action.KOFrom(c, player.discard))
-        actions.append(action.DoNothing())
-        self.game.choice(actions)
+        self.game.choice(actions, allow_do_nothing=True)
 
 
 class Hawkeye(HeroGroup):
@@ -366,24 +365,13 @@ class BlackWidowRescue(Hero):
     def on_play(self, player):
         if player.count_played(tag=Covert, ignore=self) > 0:
             actions = []
-            for c in player.hand + player.discard:
-                actions.append(bg.CustomAction(
-                    name='KO %s to rescue Bystander' % c,
-                    valid = lambda game, player: (c in player.hand or
-                                                  c in player.discard),
-                    func=self.on_ko_rescue,
-                    kwargs=dict(card=c, player=player)))
-            actions.append(action.DoNothing())
-            self.game.choice(actions)
-
-    def on_ko_rescue(self, card, player):
-        if card in player.hand:
-            player.hand.remove(card)
-        else:
-            assert card in player.discard
-            player.discard.remove(card)
-        self.game.ko.append(card)
-        player.rescue_bystander()
+            for c in player.hand:
+                actions.append(action.KOFrom(c, player.hand))
+            for c in player.discard:
+                actions.append(action.KOFrom(c, player.discard))
+            choice = self.game.choice(actions, allow_do_nothing=True)
+            if choice is not None:
+                player.rescue_bystander()
 
 class BlackWidowMission(Hero):
     name = 'Black Widow: Mission Accomplished'
@@ -463,28 +451,12 @@ class HulkUnstoppable(Hero):
         actions = []
         for c in player.hand:
             if isinstance(c, Wound):
-                actions.append(bg.CustomAction(
-                    'KO Wound from hand for P+2',
-                    func=self.on_ko_wound,
-                    kwargs=dict(player=player, card=c),
-                ))
+                actions.append(action.KOFrom(c, player.hand))
                 break
         for c in player.discard:
             if isinstance(c, Wound):
-                actions.append(bg.CustomAction(
-                    'KO Wound from discard for P+2',
-                    func=self.on_ko_wound,
-                    kwargs=dict(player=player, card=c),
-                ))
+                actions.append(action.KOFrom(c, player.discard))
                 break
-        if len(actions) > 0:
-            actions.append(action.DoNothing())
-            self.game.choice(actions)
-    def on_ko_wound(self, player, card):
-        if card in player.hand:
-            player.hand.remove(card)
-        else:
-            assert card in player.discard
-            player.discard.remove(card)
-        self.game.ko.append(card)
-        player.available_power += 2
+        choice = self.game.choice(actions, allow_do_nothing=True)
+        if choice is not None:
+            player.available_power += 2

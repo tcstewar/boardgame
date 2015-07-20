@@ -23,6 +23,13 @@ class CustomAction(Action):
     def perform(self, game, player):
         self.func(*self.args, **self.kwargs)
 
+class DoNothing(Action):
+    def __str__(self):
+        return 'Do Nothing'
+    def perform(self, game, player):
+        pass
+
+
 class UndoException(Exception):
     pass
 class LoadException(Exception):
@@ -30,6 +37,8 @@ class LoadException(Exception):
         self.filename = filename
         super(LoadException, self).__init__()
 class FinishedException(Exception):
+    pass
+class NoValidActionException(Exception):
     pass
 
 class BoardGame(object):
@@ -47,7 +56,6 @@ class BoardGame(object):
         self.finished = False
         self.events = []
         self.recent_events = []
-        self.action_queue = []
         self.players = []
         self.choices = []
         self.forced_choices = []
@@ -69,7 +77,7 @@ class BoardGame(object):
         return [a for a in actions if a.valid(self, player)]
 
     def choice(self, actions, repeat=False, allow_same_type=True,
-               player=None):
+               player=None, allow_do_nothing=False):
         while True:
             if player is None:
                 p = self.current_player
@@ -79,7 +87,13 @@ class BoardGame(object):
             valid = self.get_valid_actions(actions, p)
 
             if len(valid) == 0:
-                break
+                if allow_do_nothing:
+                    return None
+                else:
+                    raise NoValidActionException()
+
+            if allow_do_nothing:
+                valid.append(DoNothing())
 
             if len(self.forced_choices) > 0:
                 choice = self.forced_choices.pop(0)
@@ -97,7 +111,12 @@ class BoardGame(object):
                 raise FinishedException()
 
             if not repeat:
-                break
+                if isinstance(action, DoNothing):
+                    return None
+                else:
+                    return action
+            if isinstance(repeat, int):
+                repeat -= 1
 
             if not allow_same_type:
                 acts = []

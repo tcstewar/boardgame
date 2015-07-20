@@ -79,8 +79,6 @@ class PlayAll(bg.Action):
             return len(cards) > 0
         return False
     def perform(self, game, player):
-
-
         for h in player.hand[:]:
             if (isinstance(h, Hero) and
                      not hasattr(h, 'valid_play') and
@@ -275,12 +273,6 @@ class GainCard(bg.Action):
         self.card = card
     def perform(self, game, player):
         self.game.current_player.gain(self.card)
-
-class DoNothing(bg.Action):
-    def __str__(self):
-        return 'Do Nothing'
-    def perform(self, game, player):
-        pass
 
 class FightVillain(bg.Action):
     def __str__(self):

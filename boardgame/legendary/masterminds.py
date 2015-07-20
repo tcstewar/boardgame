@@ -199,11 +199,10 @@ class LokiTactic3(Tactic):
         actions = []
         for c in player.discard:
             actions.append(action.KOFrom(c, player.discard))
-        actions.append(action.DoNothing())
-        self.game.choice(actions)
-        self.game.choice(actions)
-        self.game.choice(actions)
-        self.game.choice(actions)
+        for i in range(4):
+            choice = self.game.choice(actions, allow_do_nothing=True)
+            if choice is None:
+                break
 
 class LokiTactic4(Tactic):
     name = 'Cruel Ruler'

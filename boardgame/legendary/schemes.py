@@ -38,9 +38,8 @@ class WeaveAWebOfLies(Scheme):
                 bg.CustomAction('Rescue a Bystandar for [S1]',
                     func=self.on_defeat_rescue,
                     kwargs=dict(player=player)),
-                action.DoNothing(),
                 ]
-            self.game.choice(actions)
+            self.game.choice(actions, allow_do_nothing=True)
     def on_defeat_rescue(self, player):
         player.available_star -= 1
         b = self.game.bystanders.pop()

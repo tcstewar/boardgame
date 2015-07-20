@@ -104,13 +104,16 @@ class Player(object):
         for x in self.handlers['on_fight']:
             x(enemy)
 
-    def ko_from(self, *locations):
+    def ko_hero_from(self, *locations):
         actions = []
         for loc in locations:
             for h in loc:
                 if isinstance(h, Hero):
                     actions.append(action.KOFrom(h, loc))
-        self.game.choice(actions)
+        if len(actions) == 0:
+            return None
+        else:
+            return self.game.choice(actions)
 
     def defeat(self, villain):
         self.victory_pile.extend(villain.captured)
