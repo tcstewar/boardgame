@@ -49,6 +49,20 @@ class Legendary(bg.BoardGame):
             self.mastermind = ms[mastermind](self)
         else:
             self.mastermind = self.rng.choice(ms.values())(self)
+        self.event('Mastermind: %s' % self.mastermind.text())
+
+        if scheme is None:
+            cls = self.rng.choice(ss.values())
+        else:
+            if scheme in ss:
+                cls = ss[scheme]
+            else:
+                print 'Unknown Scheme "%s"' % scheme
+                print 'Known Schemes: %s' % ss.keys()
+                raise ValueError
+        self.scheme = cls(self)
+        self.event('Scheme: %s' % self.scheme)
+
 
         n_vg = {1:1, 2:2, 3:3, 4:3, 5:4}[n_players]
         n_vh = {1:1, 2:1, 3:1, 4:2, 5:2}[n_players]
@@ -112,17 +126,6 @@ class Legendary(bg.BoardGame):
             self.event('Henchman: %s' % cls.name)
 
 
-        if scheme is None:
-            cls = self.rng.choice(ss.values())
-        else:
-            if scheme in ss:
-                cls = ss[scheme]
-            else:
-                print 'Unknown Scheme "%s"' % scheme
-                print 'Known Schemes: %s' % ss.keys()
-                raise ValueError
-        self.scheme = cls(self)
-
         for i in range(5 if not solo else 1):
             self.villain.append(MasterStrike(self))
 
@@ -175,19 +178,12 @@ class Legendary(bg.BoardGame):
         card = self.villain.pop(0)
         if isinstance(card, Villain):
             self.shift_city()
+            self.event('A new Villain enters the city: %s' % card)
             self.city[4] = card
             card.on_ambush()
-            self.event('A new Villain enters the city: %s' % card)
         elif isinstance(card, SchemeTwist):
             self.event('Scheme Twist!')
-            self.scheme.twist()
-            if len(self.players) == 1:
-                actions = []
-                for c in self.hq:
-                    if c is not None and c.cost <= 6:
-                        actions.append(action.KOFromHQ(c))
-                self.choice(actions)
-
+            self.scheme_twist()
         elif isinstance(card, MasterStrike):
             self.event('%s makes a master strike' % self.mastermind)
             self.mastermind.strike()
@@ -196,6 +192,16 @@ class Legendary(bg.BoardGame):
             self.event('%s captures a Bystander' % card)
         else:
             raise Exception('could not handle %s' % card)
+
+    def scheme_twist(self):
+        self.scheme.twist()
+        if len(self.players) == 1:
+            actions = []
+            for c in self.hq:
+                if c is not None and c.cost <= 6:
+                    actions.append(action.KOFromHQ(c))
+            self.choice(actions)
+
 
     def shift_city(self):
         index = 4
@@ -307,3 +313,8 @@ class Legendary(bg.BoardGame):
     def tie_game(self):
         self.event('Ties game!')
         raise bg.FinishedException()
+
+    def other_players(self, player):
+        for p in self.players:
+            if p is not player:
+                yield p

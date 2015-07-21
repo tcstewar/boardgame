@@ -11,4 +11,7 @@ class GamePiece(object):
         clone.is_copy = True
         return clone
 
+    def text(self):
+        return str(self)
+
 

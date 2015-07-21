@@ -466,7 +466,7 @@ class HulkUnstoppable(Hero):
             player.available_power += 2
 
 class Wolverine(HeroGroup):
-    name = 'Wolverine'
+    name = 'Wolverine (X-Men)'
     def fill(self):
         self.add(WolverineSenses, 5)
         self.add(WolverineHealing, 5)

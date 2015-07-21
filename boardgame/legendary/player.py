@@ -13,6 +13,7 @@ class Player(object):
         self.discard = []
         self.played = []
         self.victory_pile = []
+        self.return_after_draw = []
         self.available_power = 0
         self.available_star = 0
         self.used_star = 0
@@ -53,6 +54,18 @@ class Player(object):
     def draw_new_hand(self):
         self.draw(self.draw_target + self.draw_hand_extra)
         self.draw_hand_extra = 0
+        for c in self.return_after_draw:
+            if c in self.discard:
+                self.discard.remove(c)
+                self.hand.append(c)
+            elif c in self.stack:
+                self.stack.remove(c)
+                self.hand.append(c)
+            else:
+                assert c in self.hand
+                #TODO: what else chould go wrong here?
+        del self.return_after_draw[:]
+
 
     def gain(self, card):
         self.discard.append(card)
@@ -74,6 +87,12 @@ class Player(object):
             self.game.event('Reveal %s' % c)
         return cards
 
+    def reveal_tag(self, tag):
+        for c in self.hand + self.played:
+            if tag in c.tags:
+                return c
+        return None
+
     def draw(self, count, put_in_hand=True):
         cards = []
         for i in range(count):
@@ -94,6 +113,20 @@ class Player(object):
         return len(self.get_played(tag=tag, ignore=ignore))
     def get_played(self, tag, ignore=None):
         return [c for c in self.played if tag in c.tags and c is not ignore]
+
+    def count_tagged(self, tag):
+        return len(self.get_tagged(tag=tag))
+    def get_tagged(self, tag):
+        cards = []
+        for c in self.played:
+            if tag in c.tags:
+                cards.append(c)
+        for c in self.hand:
+            if tag in c.tags:
+                cards.append(c)
+        return cards
+
+
 
     def victory_points(self):
         total = 0

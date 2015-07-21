@@ -1,6 +1,6 @@
 import boardgame as bg
 
-from .core import Villain, VillainGroup, Henchman, Hero, Wound
+from .core import *
 from . import action
 from . import tags
 
@@ -153,7 +153,7 @@ class PowerSkrull(Villain):
                 self.game.choice(actions)
 
 class SkrullQueen(Villain):
-    power = None
+    power = 0
     group = Skrulls
     name = 'Skrull Queen Veranke'
     desc = ("Ambush: Capture the highest-cost Hero from HQ. P is Hero's C. "
@@ -169,8 +169,6 @@ class SkrullQueen(Villain):
             self.power = self.stolen_hero.cost
             self.game.event('Skrull Queen Veranke captures %s' %
                             self.stolen_hero)
-        else:
-            self.power = 0
     def on_fight(self, player):
         if self.stolen_hero is not None:
             self.game.event('Gained %s' % self.stolen_hero)
@@ -178,7 +176,7 @@ class SkrullQueen(Villain):
             self.stolen_hero = None
 
 class SkrullShapeshifter(Villain):
-    power = None
+    power = 0
     group = Skrulls
     name = 'Skrull Shapeshifters'
     desc = ("Ambush: Capture the right-most Hero from HQ. P is Hero's C. "
@@ -190,7 +188,6 @@ class SkrullShapeshifter(Villain):
             index -= 1
             if index < 0:
                 self.stolen_hero = None
-                self.power = 0
                 return
         self.stolen_hero = self.game.hq[index]
         self.game.hq[index] = None
@@ -282,10 +279,7 @@ class Ultron(Villain):
         return total
     def on_escape(self):
         for i, p in enumerate(self.game.players):
-            for c in p.hand + p.played:
-                if tags.Tech in c.tags:
-                    break
-            else:
+            if p.reveal_tag(tags.Tech) is None:
                 self.game.event('Ultron wounds Player %d' % (i + 1))
                 p.gain_wound()
 
@@ -357,7 +351,7 @@ class Ymir(Villain):
             'Fight: Choose a player to KO all Wounds from hand and discard.')
     def on_anbush(self):
         for p in self.game.players:
-            if p.count_played(tag=tags.Ranged) == 0:
+            if p.reveal_tag(tags.Ranged) is None:
                 self.game.event('Ymir wounds %s' % p.name)
                 p.gain_wound()
 
@@ -395,8 +389,132 @@ class FrostGiant(Villain):
             ' Escape: same effect.')
     def on_fight(self, player):
         for p in self.game.players:
-            if p.count_played(tag=tags.Ranged) == 0:
+            if p.reveal_tag(tags.Ranged) is None:
                 self.game.event('Frost Giant wounds %s' % p.name)
                 p.gain_wound()
     def on_escape(self):
         self.on_fight(None)
+
+class Brotherhood(VillainGroup):
+    name = 'Brotherhood'
+    def fill(self):
+        self.add(Juggernaut, 2)
+        self.add(Sabretooth, 2)
+        self.add(Mystique, 2)
+        self.add(Blob, 2)
+
+class Juggernaut(Villain):
+    name = 'Juggernaut'
+    power = 6
+    victory = 4
+    desc = ('Ambush: Each player KOs 2 Heroes from their discard pile.'
+            ' Escape: Each player KOs 2 Heroes from their hand.')
+    def on_ambush(self):
+        self.game.event('Juggernaut ambushes!')
+        for p in self.game.players:
+            p.ko_hero_from(p.discard)
+            p.ko_hero_from(p.discard)
+    def on_escape(self):
+        for p in self.game.players:
+            p.ko_hero_from(p.hand)
+            p.ko_hero_from(p.hand)
+
+class Sabretooth(Villain):
+    name = 'Sabretooth'
+    power = 5
+    victory = 3
+    desc = ('Fight: Each player reveals <XMn> or gains a Wound.'
+            ' Escape: Same effect.')
+    def on_fight(self, player):
+        for p in self.game.players:
+            if p.reveal_tag(tags.XMen) is None:
+                self.game.event('Sabretooth wounds %s' % p.name)
+                p.gain_wound()
+    def on_escape(self):
+        self.on_fight(None)
+
+class Mystique(Villain):
+    name = 'Mystique'
+    power = 5
+    victory = 3
+    desc = ('Escape: Mystique becomes a Scheme Twist that takes effect'
+            ' immediately.')
+    def on_escape(self):
+        self.game.event('Mystique causes a Scheme Twist')
+        self.game.scheme_twist()
+
+class Blob(Villain):
+    name = 'Blob'
+    power = 4
+    victory = 2
+    desc = "You can't defeat Blob unless you have <XMn>"
+    def can_fight(self, player):
+        return player.count_played(tag=tags.XMen) > 0
+
+class EmissariesOfEvil(VillainGroup):
+    name = 'Emissaries of Evil'
+    def fill(self):
+        self.add(Electro, 2)
+        self.add(Rhino, 2)
+        self.add(Gladiator, 2)
+        self.add(Egghead, 2)
+
+class Electro(Villain):
+    name = 'Electro'
+    power = 6
+    victory = 4
+    desc = ("Ambush: If top Villain card is a Scheme Twist, play it.")
+    def on_ambush(self):
+        if len(self.game.villain) == 0:
+            return
+        card = self.game.villain[0]
+        self.game.event('Electro reveals %s' % card.text())
+        if isinstance(card, SchemeTwist):
+            self.game.play_villain()
+
+class Rhino(Villain):
+    name = 'Rhino'
+    power = 5
+    victory = 3
+    desc = ("Ambush: If top Villain card is Master Strike, each "
+            "player gains Wound. Escape: Each player gains Wound.")
+    def on_ambush(self):
+        if len(self.game.villain) == 0:
+            return
+        card = self.game.villain[0]
+        self.game.event('Rhino reveals %s' % card.text())
+        if isinstance(card, MasterStrike):
+            for p in self.game.players:
+                self.game.event('Rhino wounds %s' % p.name)
+                p.gain_wound()
+    def on_escape(self):
+        for p in self.game.players:
+            self.game.event('Rhino wounds %s' % p.name)
+            p.gain_wound()
+
+class Gladiator(Villain):
+    name = 'Gladiator'
+    power = 5
+    victory = 3
+    desc = ("Ambush: If top Villain card is a Bystander, "
+            "Gladiator captures it.")
+    def on_ambush(self):
+        if len(self.game.villain) == 0:
+            return
+        card = self.game.villain[0]
+        self.game.event('Gladiator reveals %s' % card.text())
+        if isinstance(card, Bystander):
+            self.game.play_villain()
+
+class Egghead(Villain):
+    name = 'Egghead'
+    power = 4
+    victory = 2
+    desc = ("Ambush: If top Villain card is a Villain, play it.")
+    def on_ambush(self):
+        if len(self.game.villain) == 0:
+            return
+        card = self.game.villain[0]
+        self.game.event('Egghead reveals %s' % card.text())
+        if isinstance(card, Villain):
+            self.game.play_villain()

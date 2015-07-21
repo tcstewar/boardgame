@@ -83,11 +83,12 @@ class DrDoom(Mastermind):
     def strike(self):
         for p in self.game.players:
             if len(p.hand) == 6:
-                actions = []
-                for c in p.hand:
-                    actions.append(action.ReturnFrom(c, p.hand))
-                self.game.choice(actions, player=p)
-                self.game.choice(actions, player=p)
+                if p.reveal_tag(tags.Tech) is None:
+                    actions = []
+                    for c in p.hand:
+                        actions.append(action.ReturnFrom(c, p.hand))
+                    self.game.choice(actions, player=p)
+                    self.game.choice(actions, player=p)
 
 class DrDoomTactic1(Tactic):
     name = 'Dark Technology'
@@ -100,7 +101,7 @@ class DrDoomTactic1(Tactic):
                                   tags.Ranged in c.tags):
                 actions.append(action.GainFrom(c, self.game.hq))
         if len(actions) > 0:
-            self.game.choice(actions)
+            self.game.choice(actions, allow_do_nothing=True)
 
 class DrDoomTactic2(Tactic):
     name = "Monarch's Decree"
@@ -108,13 +109,14 @@ class DrDoomTactic2(Tactic):
             'each other player draws a card.')
     victory = 5
     def on_fight(self, player):
-        actions = [
-            bg.CustomAction('Each other player draws a card',
-                      self.on_choose_draw, kwargs=dict(player=player)),
-            bg.CustomAction('Each other player discards a card',
-                      self.on_choose_discard, kwargs=dict(player=player)),
-            ]
-        self.game.choice(actions)
+        if len(self.game.players) > 1:
+            actions = [
+                bg.CustomAction('Each other player draws a card',
+                          self.on_choose_draw, kwargs=dict(player=player)),
+                bg.CustomAction('Each other player discards a card',
+                          self.on_choose_discard, kwargs=dict(player=player)),
+                ]
+            self.game.choice(actions)
 
     def on_choose_draw(self, player):
         for p in self.game.players:
@@ -159,7 +161,7 @@ class Loki(Mastermind):
 
     def strike(self):
         for p in self.game.players:
-            if p.count_played(tag=tags.Strength) == 0:
+            if p.reveal_tag(tags.Strength) is None:
                 self.game.event('Loki wounds %s' % p.name)
                 p.gain_wound()
 
@@ -221,3 +223,81 @@ class LokiTactic4(Tactic):
                     kwargs=dict(villain=c)))
         if len(actions) > 0:
             self.game.choice(actions, allow_do_nothing=True)
+
+class Magneto(Mastermind):
+    name = 'Magneto'
+    desc = 'Master Strike: Each player reveals <Xmn> or discards down to 4.'
+
+    always_leads = villains.Brotherhood
+    power = 8
+
+    def __init__(self, game):
+        super(Magneto, self).__init__(game)
+        self.tactics = [MagnetoTactic1(game), MagnetoTactic2(game),
+                        MagnetoTactic3(game), MagnetoTactic4(game)]
+        self.game.rng.shuffle(self.tactics)
+
+    def strike(self):
+        for p in self.game.players:
+            if p.reveal_tag(tags.XMen) is None:
+                while len(p.hand) > 4:
+                    actions = []
+                    for c in p.hand:
+                        if not c.return_from_discard:
+                            actions.append(action.DiscardFrom(c, p.hand))
+                    if len(actions) == 0:
+                        break
+                    self.game.choice(actions)
+
+class MagnetoTactic1(Tactic):
+    name = "Xavier's Nemesis"
+    desc = 'For each <XMn>, rescue a Bystander'
+    victory = 5
+    def on_fight(self, player):
+        for i in range(player.count_tagged(tags.XMen)):
+            player.rescue_bystander()
+
+class MagnetoTactic2(Tactic):
+    name = "Crushing Shockwave"
+    desc = 'Each other player reveals <XMn> or gains 2 Wounds.'
+    victory = 5
+    def on_fight(self, player):
+        for p in self.game.other_players(player):
+            if p.count_tagged(tags.XMen) == 0:
+                p.gain_wound()
+                p.gain_wound()
+
+class MagnetoTactic3(Tactic):
+    name = "Electromagnetic Bubble"
+    desc = 'Choose an <XMn>. Add it to your hand after you draw your new hand.'
+    victory = 5
+    def on_fight(self, player):
+        actions = []
+        for c in player.get_tagged(tags.XMen):
+            if c.is_copy:
+                if c.original is None:
+                    continue
+                else:
+                    c = c.original
+            actions.append(bg.CustomAction(
+                'Return %s' % c.text(),
+                self.on_return,
+                kwargs=dict(player=player, card=c)))
+        if len(actions) > 0:
+            self.game.choice(actions)
+
+    def on_return(self, player, card):
+        player.return_after_draw.append(card)
+
+class MagnetoTactic4(Tactic):
+    name = "Biter Captor"
+    desc = 'Recruit an <Xmn> from HQ for free.'
+    victory = 5
+    def on_fight(self, player):
+        actions = []
+        for c in self.game.hq:
+            if c is not None and tags.XMen in c.tags:
+                actions.append(action.GainFrom(c, self.game.hq))
+        if len(actions) > 0:
+            self.game.choice(actions)
+
