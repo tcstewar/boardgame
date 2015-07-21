@@ -20,6 +20,7 @@ class Villain(bg.Card):
         self.captured = []
     def capture(self, card):
         self.captured.append(card)
+        self.game.scheme.on_capture(self, card)
     def __str__(self):
         ev = '+' if self.extra_victory else ''
         return '%s [P%d V%d%s]' % (self.name, self.power, self.victory, ev)
@@ -65,6 +66,7 @@ class Mastermind(bg.Card):
         self.captured = []
     def capture(self, card):
         self.captured.append(card)
+        self.game.scheme.on_capture(self, card)
     def text(self):
         return '%s [P%d] %s' % (self.name, self.power, self.desc)
     def __str__(self):
@@ -77,8 +79,23 @@ class Scheme(bg.Card):
         game.add_twists(self.twists)
         self.twists_done = 0
     def __str__(self):
-        return '%s (%d/%d) %s' % (self.name, self.twists_done, self.twists,
-                                  self.desc)
+        extra = self.extra_text()
+        return '%s (%d/%d) %s%s' % (self.name, self.twists_done, self.twists,
+                                    self.desc, extra)
+    def on_wound_empty(self):
+        pass
+    def extra_text(self):
+        return ''
+    def on_start(self):
+        pass
+    def adjust_bystander_count(self, count):
+        return count
+    def adjust_henchman_count(self, count):
+        return count
+    def on_capture(self, card, captured):
+        pass
+    def on_escape(self, card):
+        pass
 
 class SchemeTwist(bg.Card):
     def __str__(self):

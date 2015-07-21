@@ -71,6 +71,8 @@ class Legendary(bg.BoardGame):
 
         solo = n_players == 1
 
+        n_vh = self.scheme.adjust_henchman_count(n_vh)
+
         if villain is not None:
             if villain in vs:
                 cls = vs[villain]
@@ -121,7 +123,7 @@ class Legendary(bg.BoardGame):
                 if vhs[k] is cls:
                     del vhs[k]
                     break
-            for i in range(3 if solo else 10):
+            for j in range(3 if (solo and i == 0) else 10):
                 self.villain.append(cls(self))
             self.event('Henchman: %s' % cls.name)
 
@@ -129,7 +131,7 @@ class Legendary(bg.BoardGame):
         for i in range(5 if not solo else 1):
             self.villain.append(MasterStrike(self))
 
-        for i in range(n_by):
+        for i in range(self.scheme.adjust_bystander_count(n_by)):
             self.villain.append(self.bystanders.pop(0))
         self.rng.shuffle(self.villain)
 
@@ -144,6 +146,7 @@ class Legendary(bg.BoardGame):
         self.rng.shuffle(self.hero)
 
         self.fill_hq()
+        self.scheme.on_start()
 
     def fill_hq(self):
         for i in range(5):
@@ -189,7 +192,6 @@ class Legendary(bg.BoardGame):
             self.mastermind.strike()
         elif isinstance(card, Bystander):
             card = self.capture_bystander()
-            self.event('%s captures a Bystander' % card)
         else:
             raise Exception('could not handle %s' % card)
 
@@ -211,26 +213,30 @@ class Legendary(bg.BoardGame):
                 self.escaped.append(self.city[0])
                 self.on_escape(self.city[0])
                 self.city[0].on_escape()
+                self.scheme.on_escape(self.city[0])
                 self.city[0] = None
                 index = 0
         for i in range(index, 4):
             self.city[i] = self.city[i + 1]
         self.city[4] = None
 
-    def capture_bystander(self):
+    def capture_bystander(self, index=None):
         if len(self.bystanders) == 0:
             return
-        index = 4
-        while self.city[index] is None and index >= 0:
-            index -= 1
+        if index is None:
+            index = 4
+            while self.city[index] is None and index >= 0:
+                index -= 1
         if index < 0:
             v = self.mastermind
         else:
             v = self.city[index]
+        self.event('%s captures a Bystander' % v.name)
         v.capture(self.bystanders.pop(0))
         return v
 
     def on_escape(self, card):
+        self.event('%s escaped!' % card.name)
         actions = []
         for c in self.hq:
             if c is not None and c.cost <= 6:

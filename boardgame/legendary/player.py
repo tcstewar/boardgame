@@ -82,6 +82,8 @@ class Player(object):
             if wounder is not None:
                 self.game.event('%s wounds %s' % (wounder.name, self.name))
             self.gain(self.game.wounds.pop(0))
+        if len(self.game.wounds) == 0:
+            self.game.scheme.on_wound_empty()
 
     def reveal(self, count):
         index = len(self.hand)

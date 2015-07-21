@@ -112,7 +112,8 @@ class SpiderManAmazing(Hero):
             for a in actions:
                 player.stack.insert(0, a.card)
         else:
-            self.game.choice(actions)
+            for i in range(len(actions)):
+                self.game.choice(actions)
 
 class SpiderManResponsibility(Hero):
     name = 'Spider-Man: Great Responsibility'
