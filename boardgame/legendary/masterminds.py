@@ -162,8 +162,7 @@ class Loki(Mastermind):
     def strike(self):
         for p in self.game.players:
             if p.reveal_tag(tags.Strength) is None:
-                self.game.event('Loki wounds %s' % p.name)
-                p.gain_wound()
+                p.gain_wound(wounder=self)
 
 class LokiTactic1(Tactic):
     name = 'Whispers and Lies'
@@ -264,8 +263,8 @@ class MagnetoTactic2(Tactic):
     def on_fight(self, player):
         for p in self.game.other_players(player):
             if p.count_tagged(tags.XMen) == 0:
-                p.gain_wound()
-                p.gain_wound()
+                p.gain_wound(wounder=self)
+                p.gain_wound(wounder=self)
 
 class MagnetoTactic3(Tactic):
     name = "Electromagnetic Bubble"

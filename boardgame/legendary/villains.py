@@ -49,7 +49,7 @@ class HydraViper(Villain):
                 if v.group is Hydra and v != self:
                     break
             else:
-                p.gain_wound()
+                p.gain_wound(wounder=self)
     def on_escape(self):
         self.on_fight(None)
 
@@ -109,10 +109,9 @@ class Lizard(Villain):
     victory = 2
     def on_pre_fight(self, player):
         if self is self.game.city[4]:
-            self.game.event('The Lizard causes Wounds.')
             for p in self.game.players:
                 if p is not player:
-                    p.gain_wound()
+                    p.gain_wound(wounder=self)
 
 class Venom(Villain):
     power = 5
@@ -123,7 +122,7 @@ class Venom(Villain):
     victory = 3
     def on_escape(self):
         for p in self.game.players:
-            p.gain_wound()
+            p.gain_wound(wounder=self)
     def can_fight(self, player):
         return player.count_played(tag=tags.Covert) > 0
 
@@ -280,8 +279,7 @@ class Ultron(Villain):
     def on_escape(self):
         for i, p in enumerate(self.game.players):
             if p.reveal_tag(tags.Tech) is None:
-                self.game.event('Ultron wounds Player %d' % (i + 1))
-                p.gain_wound()
+                p.gain_wound(wounder=self)
 
 class DoombotLegion(Henchman):
     name = 'Doombot Legion'
@@ -352,8 +350,7 @@ class Ymir(Villain):
     def on_anbush(self):
         for p in self.game.players:
             if p.reveal_tag(tags.Ranged) is None:
-                self.game.event('Ymir wounds %s' % p.name)
-                p.gain_wound()
+                p.gain_wound(wounder=self)
 
     def on_fight(self, player):
         actions = []
@@ -390,8 +387,7 @@ class FrostGiant(Villain):
     def on_fight(self, player):
         for p in self.game.players:
             if p.reveal_tag(tags.Ranged) is None:
-                self.game.event('Frost Giant wounds %s' % p.name)
-                p.gain_wound()
+                p.gain_wound(wounder=self)
     def on_escape(self):
         self.on_fight(None)
 
@@ -428,8 +424,7 @@ class Sabretooth(Villain):
     def on_fight(self, player):
         for p in self.game.players:
             if p.reveal_tag(tags.XMen) is None:
-                self.game.event('Sabretooth wounds %s' % p.name)
-                p.gain_wound()
+                p.gain_wound(wounder=self)
     def on_escape(self):
         self.on_fight(None)
 
@@ -485,12 +480,10 @@ class Rhino(Villain):
         self.game.event('Rhino reveals %s' % card.text())
         if isinstance(card, MasterStrike):
             for p in self.game.players:
-                self.game.event('Rhino wounds %s' % p.name)
-                p.gain_wound()
+                p.gain_wound(wounder=self)
     def on_escape(self):
         for p in self.game.players:
-            self.game.event('Rhino wounds %s' % p.name)
-            p.gain_wound()
+            p.gain_wound(wounder=self)
 
 class Gladiator(Villain):
     name = 'Gladiator'
@@ -518,3 +511,52 @@ class Egghead(Villain):
         self.game.event('Egghead reveals %s' % card.text())
         if isinstance(card, Villain):
             self.game.play_villain()
+
+class Radiation(VillainGroup):
+    name = 'Radiation'
+    def fill(self):
+        self.add(Maestro, 2)
+        self.add(Abomination, 2)
+        self.add(Zzzax, 2)
+        self.add(TheLeader, 2)
+
+class Maestro(Villain):
+    name = 'Maestro'
+    power = 6
+    victory = 4
+    desc = "Fight: For each of your <Str> Heroes, KO one of your Heroes."
+    def on_fight(self, player):
+        for i in range(player.count_tagged(tags.Strength)):
+            player.ko_hero_from(player.hand, player.played)
+
+class Abomination(Villain):
+    name = 'Abomination'
+    power = 5
+    victory = 3
+    desc = "Fight: If you fight on Streets or Bridge, rescue 3 Bystanders."
+    def on_pre_fight(self, player):
+        if self is self.game.city[0] or self is self.game.city[1]:
+            player.rescue_bystander()
+            player.rescue_bystander()
+            player.rescue_bystander()
+
+class Zzzax(Villain):
+    name = 'Zzzax'
+    power = 5
+    victory = 3
+    desc = ("Fight: Each player reveals <Str> or gains a Wound. "
+            "Escape: same effect.")
+    def on_fight(self, player):
+        for p in self.game.players:
+            if p.reveal_tag(tags.Strength) is None:
+                p.gain_wound(wounder=self)
+    def on_escape(self):
+        self.on_fight(None)
+
+class TheLeader(Villain):
+    name = 'The Leader'
+    power = 4
+    victory = 2
+    desc = "Ambush: Play the top Villain card."
+    def on_ambush(self):
+        self.game.play_villain()

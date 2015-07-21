@@ -138,7 +138,7 @@ class BoardGame(object):
             except UndoException:
                 choices = self.choices[:-1]
                 self.reset(seed=self.seed, *self.args, **self.kwargs)
-                self.forced_choices = choices
+                self.forced_choices = choices[:]
             except LoadException as e:
                 self.load(e.filename)
             except FinishedException:

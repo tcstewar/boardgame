@@ -61,6 +61,9 @@ class Player(object):
             elif c in self.stack:
                 self.stack.remove(c)
                 self.hand.append(c)
+            elif c in self.game.ko:
+                self.game.ko.remove(c)
+                self.hand.append(c)
             else:
                 assert c in self.hand
                 #TODO: what else chould go wrong here?
@@ -70,12 +73,14 @@ class Player(object):
     def gain(self, card):
         self.discard.append(card)
 
-    def gain_wound(self):
+    def gain_wound(self, wounder=None):
         if len(self.game.wounds) > 0:
             for c in self.hand + self.played:
                 if hasattr(c, 'allow_wound'):
                     if not c.allow_wound(self):
                         return
+            if wounder is not None:
+                self.game.event('%s wounds %s' % (wounder.name, self.name))
             self.gain(self.game.wounds.pop(0))
 
     def reveal(self, count):
