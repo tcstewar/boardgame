@@ -155,15 +155,16 @@ class Tag(object):
         self.short_name = short_name
 
 class Wound(bg.Card):
+    name = 'Wound'
     power = 0
     star = 0
     cost = 0
     tags = []
     return_from_discard = False
     def __str__(self):
-        return 'Wound'
+        return self.name
     def text(self):
-        return 'Wound'
+        return self.name
     def on_play(self, player):
         pass
 

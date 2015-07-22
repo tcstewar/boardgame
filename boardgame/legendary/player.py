@@ -51,8 +51,16 @@ class Player(object):
 
         del self.played[:]
 
+    def discard_from(self, card, location):
+        if card.return_from_discard and location is self.hand:
+            #TODO: make this an option
+            self.game.event('%s returned to hand' % card)
+        else:
+            self.discard.append(card)
+            location.remove(card)
+
     def draw_new_hand(self):
-        self.draw(self.draw_target + self.draw_hand_extra)
+        self.draw(self.draw_target + self.draw_hand_extra, event_message=False)
         self.draw_hand_extra = 0
         for c in self.return_after_draw:
             if c in self.discard:
@@ -87,7 +95,7 @@ class Player(object):
 
     def reveal(self, count):
         index = len(self.hand)
-        self.draw(count)
+        self.draw(count, event_message=False)
         cards = self.hand[index:]
         del self.hand[index:]
         for c in cards:
@@ -100,7 +108,7 @@ class Player(object):
                 return c
         return None
 
-    def draw(self, count, put_in_hand=True):
+    def draw(self, count, put_in_hand=True, event_message=True):
         cards = []
         for i in range(count):
             if len(self.stack) == 0:
@@ -114,6 +122,8 @@ class Player(object):
                                 self.name)
         if put_in_hand:
             self.hand.extend(cards)
+        if event_message:
+            self.game.event('%s draws %d cards' % (self.name, len(cards)))
         return cards
 
     def count_played(self, tag, ignore=None):

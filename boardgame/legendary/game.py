@@ -61,7 +61,6 @@ class Legendary(bg.BoardGame):
                 print 'Known Schemes: %s' % ss.keys()
                 raise ValueError
         self.scheme = cls(self)
-        self.event('Scheme: %s' % self.scheme)
 
 
         n_vg = {1:1, 2:2, 3:3, 4:3, 5:4}[n_players]
@@ -147,6 +146,7 @@ class Legendary(bg.BoardGame):
 
         self.fill_hq()
         self.scheme.on_start()
+        self.event('Scheme: %s' % self.scheme)
 
     def fill_hq(self):
         for i in range(5):

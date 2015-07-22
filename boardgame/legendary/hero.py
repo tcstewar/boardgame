@@ -727,3 +727,158 @@ class RogueEnergy(Hero):
                 choice = self.game.choice(actions, allow_do_nothing=True)
                 if choice is not None:
                     player.available_star += 1
+
+class Deadpool(HeroGroup):
+    name = 'Deadpool'
+    def fill(self):
+        self.add(DeadpoolUnkind, 1)
+        self.add(DeadpoolDoOver, 3)
+        self.add(DeadpoolOddball, 5)
+        self.add(DeadpoolHoldThis, 5)
+
+class DeadpoolUnkind(Hero):
+    name = 'Deadpool: Random Acts of Unkindness'
+    cost = 7
+    power = 6
+    tags = [Instinct]
+    desc = ('You may gain Wound to your hand. '
+           'Each player passes a card to their left.')
+    def on_play(self, player):
+        if len(self.game.wounds) > 0:
+            actions = [bg.CustomAction(
+                'Gain a Wound to your hand',
+                func=self.on_gain_wound,
+                kwargs=dict(player=player))]
+            self.game.choice(actions, allow_do_nothing=True)
+
+        if len(self.game.players) > 1:
+            all_actions = []
+            for i, p in enumerate(self.game.players):
+                p2 = self.game.players[(i + 1) % len(self.game.players)]
+                actions = []
+                for c in p.hand:
+                    actions.append(bg.CustomAction(
+                        'Pass %s to %s' % (c, p2.name),
+                        func=self.on_pass,
+                        kwargs=dict(card=c, player=p, player2=p2)))
+                all_actions.append(actions)
+            for i, p in enumerate(self.game.players):
+                if all_actions[i]:
+                    self.game.choice(all_actions[i], player=p)
+
+    def on_gain_wound(self, player):
+        player.hand.append(self.game.wounds.pop(0))
+
+    def on_pass(self, card, player, player2):
+        self.game.event('%s gives %s to %s' % (player.name, card.name,
+                                               player2.name))
+        player.hand.remove(card)
+        player2.hand.append(card)
+
+class DeadpoolDoOver(Hero):
+    name = 'Deadpool: Hey, can I get a Do Over?'
+    cost = 3
+    power = 2
+    tags = [Instinct]
+    desc = ('If this is the first Hero played, you may discard the rest of '
+            'your hand and draw four cards.')
+    def on_play(self, player):
+        if len(player.played) == 1:
+            actions = [bg.CustomAction(
+                'Get a Do Over',
+                func=self.on_do_over,
+                kwargs=dict(player=player))]
+            self.game.choice(actions, allow_do_nothing=True)
+    def on_do_over(self, player):
+        for c in player.hand[:]:
+            player.discard_from(c, player.hand)
+        player.draw(4)
+
+class DeadpoolOddball(Hero):
+    name = 'Deadpool: Oddball'
+    cost = 5
+    power = 2
+    extra_power = True
+    tags = [Covert]
+    desc = ('P+1 for each other Hero played with odd C.')
+    def on_play(self, player):
+        for c in player.played:
+            if c is not self and (c.cost % 2) == 1:
+                player.available_power += 1
+
+class DeadpoolHoldThis(Hero):
+    name = 'Deadpool: Here, Hold This for a Second'
+    cost = 3
+    star = 2
+    tags = [Tech]
+    desc = ('A Villain of your choice captures a Bystander.')
+    def on_play(self, player):
+        if self.game.bystanders:
+            actions = []
+            for v in self.game.city:
+                if v is not None:
+                    actions.append(bg.CustomAction(
+                        '%s captures Bystander' % v.name,
+                        func=self.on_capture,
+                        kwargs=dict(villain=v)))
+            if actions:
+                self.game.choice(actions)
+    def on_capture(self, villain):
+        villain.capture(self.game.bystanders.pop(0))
+
+class EmmaFrost(HeroGroup):
+    name = 'Emma Frost'
+    def fill(self):
+        self.add(EmmaFrostDiamond, 1)
+        self.add(EmmaFrostPsychic, 3)
+        self.add(EmmaFrostThoughts, 5)
+        self.add(EmmaFrostMental, 5)
+
+class EmmaFrostDiamond(Hero):
+    name = 'Emma Frost: Diamond Form'
+    cost = 7
+    power = 5
+    tags = [XMen, Strength]
+    desc = ('Whenever you defeat a Villain or Mastermind this turn, S+3.')
+    def on_play(self, player):
+        def on_fight(enemy):
+            player.available_star += 3
+        player.handlers['on_fight'].append(on_fight)
+
+class EmmaFrostPsychic(Hero):
+    name = 'Emma Frost: Psychic Link'
+    cost = 5
+    power = 3
+    tags = [XMen, Instinct]
+    desc = 'Each player who reveals another <XMn> draws a card.'
+    def on_play(self, player):
+        for p in self.game.players:
+            if p.reveal_tag(XMen) is not None:
+                p.draw(1)
+
+class EmmaFrostThoughts(Hero):
+    name = 'Emma Frost: Shadowed Thoughts'
+    cost = 4
+    power = 2
+    tags = [XMen, Covert]
+    desc = ('You may play a Villain. If you do, P+3.')
+    def on_play(self, player):
+        if self.game.villain:
+            actions = [bg.CustomAction(
+                'Play Villain',
+                func=self.on_play_villain,
+                kwargs=dict(player=player))]
+            self.game.choice(actions, allow_do_nothing=True)
+    def on_play_villain(self, player):
+        self.game.play_villain()
+        player.available_power += 2
+
+class EmmaFrostMental(Hero):
+    name = 'Emma Frost: Mental Discipline'
+    cost = 3
+    star = 1
+    tags = [XMen, Ranged]
+    desc = ('Draw a card.')
+    def on_play(self, player):
+        player.draw(1)
+

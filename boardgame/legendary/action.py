@@ -196,12 +196,7 @@ class DiscardFrom(bg.Action):
     def valid(self, game, player):
         return self.card in self.location
     def perform(self, game, player):
-        if self.card.return_from_discard:
-            #TODO: make this an option
-            game.event('%s returned to hand' % self.card)
-        else:
-            player.discard.append(self.card)
-            self.location.remove(self.card)
+        player.discard_from(self.card, self.location)
 
 class GainFrom(bg.Action):
     def __str__(self):

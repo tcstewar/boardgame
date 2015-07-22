@@ -157,7 +157,9 @@ class BoardGame(object):
     def load(self, filename):
         with open(filename) as f:
             state = json.loads(f.read())
-        self.reset(seed=state['seed'], *state['args'], **state['kwargs'])
+        self.args = state['args']
+        self.kwargs = state['kwargs']
+        self.reset(seed=state['seed'], *self.args, **self.kwargs)
         self.forced_choices = state['choices']
 
 
