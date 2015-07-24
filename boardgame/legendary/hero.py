@@ -853,7 +853,7 @@ class EmmaFrostPsychic(Hero):
     desc = 'Each player who reveals another <XMn> draws a card.'
     def on_play(self, player):
         for p in self.game.players:
-            if p.reveal_tag(XMen) is not None:
+            if p.reveal_tag(XMen, ignore=self) is not None:
                 p.draw(1)
 
 class EmmaFrostThoughts(Hero):
@@ -871,7 +871,7 @@ class EmmaFrostThoughts(Hero):
             self.game.choice(actions, allow_do_nothing=True)
     def on_play_villain(self, player):
         self.game.play_villain()
-        player.available_power += 2
+        player.available_power += 3
 
 class EmmaFrostMental(Hero):
     name = 'Emma Frost: Mental Discipline'
@@ -881,4 +881,236 @@ class EmmaFrostMental(Hero):
     desc = ('Draw a card.')
     def on_play(self, player):
         player.draw(1)
+
+class Gambit(HeroGroup):
+    name = 'Gambit'
+    def fill(self):
+        self.add(GambitJackpot, 1)
+        self.add(GambitCharm, 3)
+        self.add(GambitCardShark, 5)
+        self.add(GambitStackDeck, 5)
+
+class GambitJackpot(Hero):
+    name = 'Gambit: High Stakes Jackpot'
+    cost = 7
+    power = 4
+    extra_power = True
+    tags = [XMen, Instinct]
+    desc = ("Reveal top card of deck. P+ that card's C.")
+    def on_play(self, player):
+        cards = player.reveal(1)
+        if len(cards) > 0:
+            card = cards[0]
+            player.available_power += card.cost
+            player.stack.insert(0, card)
+
+class GambitCharm(Hero):
+    name = 'Gambit: Hypnotic Charm'
+    cost = 3
+    star = 2
+    tags = [XMen, Instinct]
+    desc = ("Reveal top card of deck. Discard it or put it back."
+            " <Ins>: do the same to each other player's deck.")
+    def on_play(self, player):
+        cards = player.reveal(1)
+        if cards:
+            self.game.choice([action.DiscardFrom(cards[0], cards),
+                              action.ReturnFrom(cards[0], cards)])
+        if player.count_played(tag=Instinct, ignore=self):
+            for p in self.game.players:
+                if p is not self:
+                    cards = p.reveal(1)
+                    if cards:
+                        self.game.choice([action.DiscardFrom(cards[0],
+                                                             cards, p),
+                                          action.ReturnFrom(cards[0],
+                                                            cards, p)])
+
+class GambitCardShark(Hero):
+    name = 'Gambit: Card Shark'
+    cost = 4
+    power = 2
+    tags = [XMen, Ranged]
+    desc = ("Reveal top card of deck. If it is <XMn>, draw it.")
+    def on_play(self, player):
+        cards = player.reveal(1)
+        if cards:
+            player.return_to_stack(cards[0])
+            if XMen in cards[0].tags:
+                player.draw(1)
+
+class GambitStackDeck(Hero):
+    name = 'Gambit: Stack the Deck'
+    cost = 2
+    tags = [XMen, Covert]
+    desc = ("Draw 2 cards. Put a card from your hand on top of the deck.")
+    def on_play(self, player):
+        player.draw(2)
+        actions = []
+        for c in player.hand:
+            actions.append(action.ReturnFrom(c, player.hand))
+        if actions:
+            self.game.choice(actions)
+
+class NickFury(HeroGroup):
+    name = 'Nick Fury'
+    def fill(self):
+        self.add(NickFuryPure, 1)
+        self.add(NickFuryCommander, 3)
+        self.add(NickFuryPromotion, 5)
+        self.add(NickFuryWeaponry, 5)
+
+class NickFuryPure(Hero):
+    name = 'Nick Fury: Pure Fury'
+    cost = 8
+    tags = [Shield, Tech]
+    desc = ("Defeat any Villain or Mastermind whose P is less than the"
+            " number of SHIELD Heroes in the KO pile.")
+    def on_play(self, player):
+        count = 0
+        for c in self.game.ko:
+            if Shield in c.tags:
+                count += 1
+        actions = []
+        for v in self.game.city:
+            if v is not None and v.power < count:
+                actions.append(bg.CustomAction('Defeat %s' % v.text(),
+                    func=player.defeat,
+                    kwargs=dict(villain=v)))
+        if self.game.mastermind.power < count:
+            v = self.game.mastermind
+            actions.append(bg.CustomAction('Defeat %s' % v.text(),
+                func=player.defeat,
+                kwargs=dict(villain=v)))
+        self.game.choice(actions)
+
+class NickFuryCommander(Hero):
+    name = 'Nick Fury: Legendary Commander'
+    cost = 6
+    power = 1
+    extra_power = True
+    tags = [Shield, Strength]
+    desc = ("P+1 for each other <Shd> played this turn.")
+    def on_play(self, player):
+        count = player.count_played(Shield, ignore=self)
+        player.available_power += count
+
+class NickFuryPromotion(Hero):
+    name = 'Nick Fury: Battlefield Promotion'
+    cost = 4
+    tags = [Shield, Covert]
+    desc = ("You may KO a <Shd> Hero from hand or discard pile. "
+            "If you do, gain a SHIELD Officer to your hand")
+    def on_play(self, player):
+        actions = []
+        for c in player.hand:
+            if Shield in c.tags:
+                actions.append(action.KOFrom(c, player.hand))
+        for c in player.discard:
+            if Shield in c.tags:
+                actions.append(action.KOFrom(c, player.discard))
+        choice = self.game.choice(actions, allow_do_nothing=True)
+        if choice is not None and self.game.officers:
+            player.hand.append(self.game.officers.pop())
+
+class NickFuryWeaponry(Hero):
+    name = 'Nick Fury: High Tech Weaponry'
+    cost = 3
+    power = 2
+    extra_power = True
+    tags = [Shield, Tech]
+    desc = ("<Tec>: P+1")
+    def on_play(self, player):
+        if player.count_played(Tech, ignore=self):
+            player.available_power += 1
+
+class Storm(HeroGroup):
+    name = 'Storm'
+    def fill(self):
+        self.add(StormTidalWave, 1)
+        self.add(StormCyclone, 3)
+        self.add(StormLightning, 5)
+        self.add(StormGathering, 5)
+
+class StormTidalWave(Hero):
+    name = 'Storm: Tidal Wave'
+    cost = 7
+    power = 5
+    tags = [XMen, Ranged]
+    desc = ("Villains on Bridge get P-2. <Rng>: Mastermind gets P-2.")
+    def on_play(self, player):
+
+        adjust_bridge = AdjustPower(
+            items=lambda game: [game.city[0]],
+            amount=-2)
+        self.game.add_turn_handler('on_choice', adjust_bridge)
+        if player.count_played(Ranged, ignore=self):
+            adjust_mastermind = AdjustPower(
+                items=lambda game: [game.mastermind],
+                amount=-2)
+            self.game.add_turn_handler('on_choice', adjust_mastermind)
+
+class StormCyclone(Hero):
+    name = 'Storm: Spinning Cyclone'
+    cost = 6
+    power = 4
+    tags = [XMen, Covert]
+    desc = ("You may move Villain to new space. Rescue "
+            "Bystanders captured by Villain. If space full, swap.")
+    def on_play(self, player):
+        actions = []
+        for v in self.game.city:
+            if v is not None:
+                actions.append(bg.CustomAction(
+                    'Move %s' % v.text(),
+                    func=self.on_move,
+                    kwargs=dict(villain=v, player=player)))
+        if actions:
+            self.game.choice(actions)
+    def on_move(self, villain, player):
+        actions = []
+        for i in range(5):
+            if self.game.city[i] is not villain:
+                actions.append(bg.CustomAction(
+                    'Move %s to %s' % (villain.name, self.game.city_names[i]),
+                    func=self.on_move_to,
+                    kwargs=dict(villain=villain, target=i, player=player)))
+        self.game.choice(actions)
+
+    def on_move_to(self, villain, target, player):
+        player.rescue_bystander(villain)
+
+        index = self.game.city.index(villain)
+        self.game.city[index] = self.game.city[target]
+        self.game.city[target] = villain
+
+class StormLightning(Hero):
+    name = 'Storm: Lightning Bolt'
+    cost = 4
+    power = 2
+    tags = [XMen, Ranged]
+    desc = ("Villains on Rooftops get P-2.")
+    def on_play(self, player):
+        adjust_roof = AdjustPower(
+            items=lambda game: [game.city[2]],
+            amount=-2)
+        self.game.add_turn_handler('on_choice', adjust_roof)
+
+class StormGathering(Hero):
+    name = 'Storm: Gathering Stormclouds'
+    cost = 3
+    star = 2
+    tags = [XMen, Ranged]
+    desc = ("<Rng>: Draw a card")
+    def on_play(self, player):
+        if player.count_played(Ranged, ignore=self):
+            player.draw(1)
+
+
+
+
+
+
+
+
 

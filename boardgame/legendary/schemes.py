@@ -26,7 +26,7 @@ class WeaveAWebOfLies(Scheme):
     name = 'Weave a Web of Lies'
     twists = 7
     desc = ("Can't fight mastermind unless # Bystanders >= # twists done. "
-            "Defeat: [1S] to rescue bystander.")
+            "Defeat: [1S] to rescue bystander. 7 twists: evil wins")
     def valid_fight_mastermind(self, player):
         count = len([c for c in player.victory_pile
                        if isinstance(c, Bystander)])

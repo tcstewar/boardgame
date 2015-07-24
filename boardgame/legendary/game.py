@@ -18,6 +18,7 @@ class Legendary(bg.BoardGame):
         super(Legendary, self).reset(seed=seed)
         self.villain = []
         self.city = [None, None, None, None, None]
+        self.city_names = ['Bridge', 'Street', 'Rooftops', 'Bank', 'Sewers']
         self.hero = []
         self.hq = [None, None, None, None, None]
         self.escaped = []
@@ -28,6 +29,8 @@ class Legendary(bg.BoardGame):
         self.players = [Player(self, name='Player %d' % (i+1))
                         for i in range(n_players)]
 
+        self.turn_handlers = {}
+        self.turn_handlers['on_choice'] = []
 
         ms = dict(inspect.getmembers(masterminds,
             lambda x: inspect.isclass(x) and issubclass(x, Mastermind) and
@@ -202,7 +205,8 @@ class Legendary(bg.BoardGame):
             for c in self.hq:
                 if c is not None and c.cost <= 6:
                     actions.append(action.KOFromHQ(c))
-            self.choice(actions)
+            if actions:
+                self.choice(actions)
 
 
     def shift_city(self):
@@ -317,10 +321,26 @@ class Legendary(bg.BoardGame):
         self.event('Good Wins!')
         raise bg.FinishedException()
     def tie_game(self):
-        self.event('Ties game!')
+        self.event('Tie game!')
         raise bg.FinishedException()
 
     def other_players(self, player):
         for p in self.players:
             if p is not player:
                 yield p
+
+    def choice(self, actions, **kwargs):
+        for h in self.turn_handlers['on_choice']:
+            h.update(self)
+        super(Legendary, self).choice(actions, **kwargs)
+        for h in self.turn_handlers['on_choice']:
+            h.update(self)
+
+    def add_turn_handler(self, key, handler):
+        self.turn_handlers[key].append(handler)
+        handler.start(self)
+
+    def clear_turn_handlers(self):
+        for v in self.turn_handlers.values():
+            while len(v) > 0:
+                v.pop().stop(self)

@@ -95,27 +95,32 @@ class Player(object):
 
     def reveal(self, count):
         index = len(self.hand)
-        self.draw(count, event_message=False)
+        self.draw(count, event_message=False, count_draw=False)
         cards = self.hand[index:]
         del self.hand[index:]
         for c in cards:
             self.game.event('Reveal %s' % c)
         return cards
 
-    def reveal_tag(self, tag):
+    def return_to_stack(self, card):
+        self.stack.insert(0, card)
+
+    def reveal_tag(self, tag, ignore=None):
         for c in self.hand + self.played:
-            if tag in c.tags:
+            if tag in c.tags and c is not ignore:
                 return c
         return None
 
-    def draw(self, count, put_in_hand=True, event_message=True):
+    def draw(self, count, put_in_hand=True, event_message=True,
+             count_draw=True):
         cards = []
         for i in range(count):
             if len(self.stack) == 0:
                 self.stack.extend(self.game.rng.permutation(self.discard))
                 del self.discard[:]
             if len(self.stack) > 0:
-                self.extra_draw_count += 1
+                if count_draw:
+                    self.extra_draw_count += 1
                 cards.append(self.stack.pop(0))
             else:
                 self.game.event('%s tries to draw but has no cards' %
@@ -123,7 +128,12 @@ class Player(object):
         if put_in_hand:
             self.hand.extend(cards)
         if event_message:
-            self.game.event('%s draws %d cards' % (self.name, len(cards)))
+            if len(cards) == 0:
+                self.game.event('%s draws no cards' % self.name)
+            elif len(cards) == 1:
+                self.game.event('%s draws a card' % self.name)
+            else:
+                self.game.event('%s draws %d cards' % (self.name, len(cards)))
         return cards
 
     def count_played(self, tag, ignore=None):
@@ -166,10 +176,21 @@ class Player(object):
         self.played.append(card)
         card.on_play(self)
 
-    def rescue_bystander(self):
-        if len(self.game.bystanders) > 0:
-            self.victory_pile.append(self.game.bystanders.pop())
-            self.game.event('Rescued Bystander')
+    def rescue_bystander(self, villain=None):
+        if villain is None:
+            if len(self.game.bystanders) > 0:
+                self.victory_pile.append(self.game.bystanders.pop())
+                self.game.event('Rescued Bystander')
+        else:
+            if villain.captured:
+                self.victory_pile.extend(villain.captured)
+                if len(villain.captured) == 1:
+                    self.game.event('Rescued Bystander from %s' % villain.name)
+                else:
+                    self.game.event('Rescued %d Bystanders from %s' %
+                            (len(villain.captured), villain.name))
+                del villain.captured[:]
+
 
 
     def on_fight(self, enemy):
@@ -188,8 +209,7 @@ class Player(object):
             return self.game.choice(actions)
 
     def defeat(self, villain):
-        self.victory_pile.extend(villain.captured)
-        del villain.captured[:]
+        self.rescue_bystander(villain)
 
         if villain is self.game.mastermind:
             m = villain

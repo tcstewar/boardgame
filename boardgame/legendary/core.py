@@ -168,3 +168,46 @@ class Wound(bg.Card):
     def on_play(self, player):
         pass
 
+class Handler(object):
+    def start(self):
+        raise NotImplementedError
+    def stop(self):
+        raise NotImplementedError
+    def update(self):
+        raise NotImplementedError
+
+class Adjust(Handler):
+    def __init__(self, items):
+        self.items_func = items
+        self.applied = []
+    def items(self, game):
+        return self.items_func(game)
+    def start(self, game):
+        print 'adjust', self
+        for c in self.items(game):
+            print 'checking', c
+            if c is not None:
+                self.apply(c)
+                self.applied.append(c)
+    def update(self, game):
+        self.stop(game)
+        self.start(game)
+    def stop(self, game):
+        for c in self.applied:
+            self.remove(c)
+        del self.applied[:]
+    def apply(self, item):
+        raise NotImplementedError
+    def remove(self, item):
+        raise NotImplementedError
+
+class AdjustPower(Adjust):
+    def __init__(self, items, amount):
+        super(AdjustPower, self).__init__(items)
+        self.amount = amount
+
+    def apply(self, item):
+        item.power += self.amount
+
+    def remove(self, item):
+        item.power -= self.amount

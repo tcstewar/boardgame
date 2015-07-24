@@ -28,6 +28,7 @@ class EndTurn(bg.Action):
         player.draw_target = 6
         player.can_use_star_as_power = False
         player.clear_handlers()
+        game.clear_turn_handlers()
         game.state = BeginTurn
         if player.take_another_turn:
             player.take_another_turn = False
@@ -190,12 +191,15 @@ class KOFromHQ(bg.Action):
 class DiscardFrom(bg.Action):
     def __str__(self):
         return 'Discard %s' % self.card
-    def __init__(self, card, location):
+    def __init__(self, card, location, player=None):
         self.card = card
+        self.player = player
         self.location = location
     def valid(self, game, player):
         return self.card in self.location
     def perform(self, game, player):
+        if self.player is not None:
+            player = self.player
         player.discard_from(self.card, self.location)
 
 class GainFrom(bg.Action):
