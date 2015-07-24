@@ -332,9 +332,10 @@ class Legendary(bg.BoardGame):
     def choice(self, actions, **kwargs):
         for h in self.turn_handlers['on_choice']:
             h.update(self)
-        super(Legendary, self).choice(actions, **kwargs)
+        c = super(Legendary, self).choice(actions, **kwargs)
         for h in self.turn_handlers['on_choice']:
             h.update(self)
+        return c
 
     def add_turn_handler(self, key, handler):
         self.turn_handlers[key].append(handler)
