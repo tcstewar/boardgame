@@ -38,6 +38,8 @@ if __name__ == '__main__':
                         help='Hero to use')
     parser.add_argument('--scheme', default=None, type=str,
                         help='Evil scheme')
+    parser.add_argument('--basic', action='store_true',
+                        help='Use basic solo mode')
     args = parser.parse_args()
 
 
@@ -46,6 +48,7 @@ if __name__ == '__main__':
                                          mastermind=args.mastermind,
                                          hero=args.hero,
                                          scheme=args.scheme,
+                                         basic=args.basic,
                                          villain=args.villain)
 
     def selector(game, actions):

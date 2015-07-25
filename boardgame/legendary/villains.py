@@ -109,9 +109,8 @@ class Lizard(Villain):
     victory = 2
     def on_pre_fight(self, player):
         if self is self.game.city[4]:
-            for p in self.game.players:
-                if p is not player:
-                    p.gain_wound(wounder=self)
+            for p in player.other_players():
+                p.gain_wound(wounder=self)
 
 class Venom(Villain):
     power = 5

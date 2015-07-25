@@ -188,6 +188,20 @@ class KOFromHQ(bg.Action):
         game.hq[index] = None
         game.fill_hq()
 
+class ReplaceFromHQ(bg.Action):
+    def __str__(self):
+        return 'Replace from HQ: %s' % self.card.text()
+    def __init__(self, card):
+        self.card = card
+    def valid(self, game, player):
+        return self.card in game.hq
+    def perform(self, game, player):
+        index = game.hq.index(self.card)
+        game.hero.append(self.card)
+        game.hq[index] = None
+        game.fill_hq()
+
+
 class DiscardFrom(bg.Action):
     def __str__(self):
         return 'Discard %s' % self.card

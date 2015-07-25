@@ -244,5 +244,10 @@ class Player(object):
         choice = self.game.choice(actions)
         return choice.star
 
+    def other_players(self):
+        for p in self.game.players:
+            if p is not self or self.game.solo_advanced:
+                yield p
+
 
 

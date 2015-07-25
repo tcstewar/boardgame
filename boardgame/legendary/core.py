@@ -74,6 +74,7 @@ class Mastermind(bg.Card):
 
 
 class Scheme(bg.Card):
+    allow_solo = True
     def __init__(self, game):
         super(Scheme, self).__init__(game)
         game.add_twists(self.twists)
@@ -92,9 +93,13 @@ class Scheme(bg.Card):
         return count
     def adjust_henchman_count(self, count):
         return count
+    def adjust_hero_count(self, count):
+        return count
     def on_capture(self, card, captured):
         pass
     def on_escape(self, card):
+        pass
+    def on_empty_hero(self):
         pass
 
 class SchemeTwist(bg.Card):

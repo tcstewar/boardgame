@@ -109,27 +109,24 @@ class DrDoomTactic2(Tactic):
             'each other player draws a card.')
     victory = 5
     def on_fight(self, player):
-        if len(self.game.players) > 1:
-            actions = [
-                bg.CustomAction('Each other player draws a card',
-                          self.on_choose_draw, kwargs=dict(player=player)),
-                bg.CustomAction('Each other player discards a card',
-                          self.on_choose_discard, kwargs=dict(player=player)),
-                ]
-            self.game.choice(actions)
+        actions = [
+            bg.CustomAction('Each other player draws a card',
+                      self.on_choose_draw, kwargs=dict(player=player)),
+            bg.CustomAction('Each other player discards a card',
+                      self.on_choose_discard, kwargs=dict(player=player)),
+            ]
+        self.game.choice(actions)
 
     def on_choose_draw(self, player):
-        for p in self.game.players:
-            if p is not player:
-                p.draw(1)
+        for p in player.other_players():
+            p.draw(1)
 
     def on_choose_discard(self, player):
-        for p in self.game.players:
-            if p is not player:
-                actions = []
-                for h in p.hand:
-                    actions.append(action.DiscardFrom(h, p.hand))
-                self.game.choice(actions, player=p)
+        for p in player.other_players():
+            actions = []
+            for h in p.hand:
+                actions.append(action.DiscardFrom(h, p.hand))
+            self.game.choice(actions, player=p)
 
 class DrDoomTactic3(Tactic):
     name = 'Secrets of Time Travel'
@@ -169,25 +166,22 @@ class LokiTactic1(Tactic):
     desc = 'Each other player KOs 2 Bystanders from victory pile'
     victory = 5
     def on_fight(self, player):
-        for p in self.game.players:
-            if p is not player:
-                count = 2
-                for c in p.victory_pile[:]:
-                    if isinstance(c, Bystander):
-                        p.victory_pile.remove(c)
-                        self.game.ko.append(c)
-                        count -= 1
-                        if count == 0:
-                            break
+        for p in player.other_players():
+            count = 2
+            for c in p.victory_pile[:]:
+                if isinstance(c, Bystander):
+                    p.victory_pile.remove(c)
+                    self.game.ko.append(c)
+                    count -= 1
+                    if count == 0:
+                        break
 
 class LokiTactic2(Tactic):
     name = 'Vanishing Illusions'
     desc = 'Each other player KOs a Villain from their victory pile.'
     victory = 5
     def on_fight(self, player):
-        for p in self.game.players:
-            if p is player:
-                continue
+        for p in player.other_players():
             actions = []
             for c in p.victory_pile:
                 if isinstance(c, Villain):
@@ -261,7 +255,7 @@ class MagnetoTactic2(Tactic):
     desc = 'Each other player reveals <XMn> or gains 2 Wounds.'
     victory = 5
     def on_fight(self, player):
-        for p in self.game.other_players(player):
+        for p in player.other_players():
             if p.count_tagged(tags.XMen) == 0:
                 p.gain_wound(wounder=self)
                 p.gain_wound(wounder=self)

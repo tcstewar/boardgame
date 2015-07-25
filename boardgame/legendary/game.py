@@ -14,7 +14,8 @@ from .core import *
 
 class Legendary(bg.BoardGame):
     def reset(self, seed=None, n_players=2, mastermind=None, villain=None,
-                                            hero=None, scheme=None):
+                                            hero=None, scheme=None,
+                                            basic=False):
         super(Legendary, self).reset(seed=seed)
         self.villain = []
         self.city = [None, None, None, None, None]
@@ -56,6 +57,8 @@ class Legendary(bg.BoardGame):
 
         if scheme is None:
             cls = self.rng.choice(ss.values())
+            while n_players == 1 and not cls.allow_solo:
+                cls = self.rng.choice(ss.values())
         else:
             if scheme in ss:
                 cls = ss[scheme]
@@ -72,8 +75,15 @@ class Legendary(bg.BoardGame):
         n_hg = {1:3, 2:5, 3:5, 4:5, 5:6}[n_players]
 
         solo = n_players == 1
+        if not solo:
+            self.solo_basic = False
+            self.solo_advanced = False
+        else:
+            self.solo_basic = basic
+            self.solo_advanced = not basic
 
         n_vh = self.scheme.adjust_henchman_count(n_vh)
+        n_hg = self.scheme.adjust_hero_count(n_hg)
 
         if villain is not None:
             if villain in vs:
@@ -130,7 +140,7 @@ class Legendary(bg.BoardGame):
             self.event('Henchman: %s' % cls.name)
 
 
-        for i in range(5 if not solo else 1):
+        for i in range(1 if self.solo_basic else 5):
             self.villain.append(MasterStrike(self))
 
         for i in range(self.scheme.adjust_bystander_count(n_by)):
@@ -153,12 +163,12 @@ class Legendary(bg.BoardGame):
 
     def fill_hq(self):
         for i in range(5):
-            if self.hq[i] is None and len(self.hero) > 0:
+            if self.hq[i] is None:
                 if len(self.hero) == 0:
+                    self.scheme.on_empty_hero()
                     self.tie_game()
                     return
                 self.hq[i] = self.hero.pop(0)
-
 
     def add_twists(self, count):
         for i in range(count):
@@ -193,6 +203,8 @@ class Legendary(bg.BoardGame):
         elif isinstance(card, MasterStrike):
             self.event('%s makes a master strike' % self.mastermind)
             self.mastermind.strike()
+            if self.solo_advanced:
+                self.play_villain()
         elif isinstance(card, Bystander):
             card = self.capture_bystander()
         else:
@@ -204,7 +216,10 @@ class Legendary(bg.BoardGame):
             actions = []
             for c in self.hq:
                 if c is not None and c.cost <= 6:
-                    actions.append(action.KOFromHQ(c))
+                    if self.solo_advanced:
+                        actions.append(action.ReplaceFromHQ(c))
+                    else:
+                        actions.append(action.KOFromHQ(c))
             if actions:
                 self.choice(actions)
 
@@ -323,11 +338,6 @@ class Legendary(bg.BoardGame):
     def tie_game(self):
         self.event('Tie game!')
         raise bg.FinishedException()
-
-    def other_players(self, player):
-        for p in self.players:
-            if p is not player:
-                yield p
 
     def choice(self, actions, **kwargs):
         for h in self.turn_handlers['on_choice']:

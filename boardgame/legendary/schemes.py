@@ -113,6 +113,51 @@ class PrisonOutbreak(Scheme):
         if len(self.game.escaped) >= 12:
             self.game.evil_wins()
 
+class CivilWar(Scheme):
+    name = 'Super Hero Civil War'
+    allow_solo = False
+    desc = "Twist: KO all Heroes in HQ. If Hero pile runs out, Evil wins."
+    def __init__(self, game):
+        n_players = len(game.players)
+        if 2 <= n_players <= 3:
+            self.twists = 8
+        elif 4 <= n_players <= 5:
+            self.twists = 5
+        else:
+            assert False
+        super(CivilWar, self).__init__(game)
+    def adjust_hero_count(self, count):
+        if len(self.game.players) == 2:
+            return 4
+    def twist(self):
+        self.twists_done += 1
+        for i, h in enumerate(self.game.hq):
+            if h is not None:
+                self.game.event('Civil War KOs %s' % h.name)
+                self.game.ko.append(h)
+                self.game.hq[i] = None
+        self.game.fill_hq()
+    def on_empty_hero(self):
+        self.game.evil_wins()
+
+class NegativeZone(Scheme):
+    name = 'Negative Zone Prison Breakout'
+    allow_solo = False
+    desc = ("Twist: Play top 2 Villains. If 12 Villains escape, evil wins.")
+    twists = 8
+    def adjust_henchman_count(self, count):
+        return count + 1
+    def twist(self):
+        self.twists_done += 1
+        self.game.play_villain()
+        self.game.play_villain()
+    def on_escape(self, card):
+        if len(self.game.escaped) >= 12:
+            self.game.evil_wins()
+
+
+
+
 
 
 
