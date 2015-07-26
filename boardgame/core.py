@@ -76,6 +76,9 @@ class BoardGame(object):
     def get_valid_actions(self, actions, player):
         return [a for a in actions if a.valid(self, player)]
 
+    def on_choice(self):
+        pass
+
     def choice(self, actions, repeat=False, allow_same_type=True,
                player=None, allow_do_nothing=False):
         while True:
@@ -83,6 +86,7 @@ class BoardGame(object):
                 p = self.current_player
             else:
                 p = player
+            self.on_choice()
 
             valid = self.get_valid_actions(actions, p)
 

@@ -78,6 +78,7 @@ class Mastermind(bg.Card):
 
 class Scheme(bg.Card):
     allow_solo = True
+    always_leads = None
     def __init__(self, game):
         super(Scheme, self).__init__(game)
         game.add_twists(self.twists)
@@ -115,6 +116,7 @@ class Bystander(bg.Card):
     victory = 1
     extra_victory = False
     group = None
+    tags = []
     def __str__(self):
         return 'Bystander'
 
@@ -191,9 +193,7 @@ class Adjust(Handler):
     def items(self, game):
         return self.items_func(game)
     def start(self, game):
-        print 'adjust', self
         for c in self.items(game):
-            print 'checking', c
             if c is not None:
                 self.apply(c)
                 self.applied.append(c)

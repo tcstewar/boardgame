@@ -32,6 +32,8 @@ class Legendary(bg.BoardGame):
 
         self.turn_handlers = {}
         self.turn_handlers['on_choice'] = []
+        self.handlers = {}
+        self.handlers['on_choice'] = []
 
         ms = dict(inspect.getmembers(masterminds,
             lambda x: inspect.isclass(x) and issubclass(x, Mastermind) and
@@ -353,15 +355,23 @@ class Legendary(bg.BoardGame):
         raise bg.FinishedException()
 
     def choice(self, actions, **kwargs):
-        for h in self.turn_handlers['on_choice']:
-            h.update(self)
+        self.on_choice()
         c = super(Legendary, self).choice(actions, **kwargs)
+        self.on_choice()
+        return c
+
+    def on_choice(self):
         for h in self.turn_handlers['on_choice']:
             h.update(self)
-        return c
+        for h in self.handlers['on_choice']:
+            h.update(self)
+
 
     def add_turn_handler(self, key, handler):
         self.turn_handlers[key].append(handler)
+        handler.start(self)
+    def add_handler(self, key, handler):
+        self.handlers[key].append(handler)
         handler.start(self)
 
     def clear_turn_handlers(self):

@@ -161,6 +161,10 @@ class Player(object):
             total += c.victory
             if c.extra_victory:
                 total += c.extra_victory(self)
+        for c in self.game.escaped:
+            total -= 4 * len(c.captured)
+            total -= 1
+        total -= self.game.scheme.twists_done * 3
         return total
 
     def play_from_hand(self, card):

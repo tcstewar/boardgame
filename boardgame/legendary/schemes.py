@@ -130,6 +130,8 @@ class CivilWar(Scheme):
     def adjust_hero_count(self, count):
         if len(self.game.players) == 2:
             return 4
+        else:
+            return count
     def twist(self):
         self.twists_done += 1
         for i, h in enumerate(self.game.hq):
@@ -224,6 +226,24 @@ class SecretInvasion(Scheme):
             self.game.evil_wins()
     def extra_text(self):
         return '[%d]' % self.count_escaped()
+
+class DarkPortals(Scheme):
+    name = "Portals to the Dark Dimension"
+    twists = 7
+    desc = ("Twist 1: Mastermind gets P+1. Twists 2-6: City space gets P+1."
+            "Twist 7: Evil wins!")
+    def twist(self):
+        self.twists_done += 1
+        if self.twists_done == 1:
+            self.game.mastermind.power += 1
+        elif self.twists_done == 7:
+            self.game.evil_wins()
+        else:
+            index = self.twists_done - 2
+            adjust = AdjustPower(
+                items=lambda game: [game.city[index]],
+                amount=1)
+            self.game.add_handler('on_choice', adjust)
 
 
 
