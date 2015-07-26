@@ -221,7 +221,11 @@ class Player(object):
             index = self.game.city.index(villain)
             self.game.city[index] = None
 
-        self.victory_pile.append(villain)
+        if villain.original is None:
+            v = villain
+        else:
+            v = villain.original
+        self.victory_pile.append(v)
         villain.on_fight(self)
         self.on_fight(villain)
 

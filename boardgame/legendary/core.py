@@ -12,9 +12,12 @@ class Group(object):
             self.group.append(c)
 
 class Villain(bg.Card):
+    group = None
     power = 0
     victory = 0
     extra_victory = None
+    desc = ''
+    original = None
     def __init__(self, game):
         self.game = game
         self.captured = []

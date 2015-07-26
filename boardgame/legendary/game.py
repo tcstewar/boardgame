@@ -118,6 +118,8 @@ class Legendary(bg.BoardGame):
         for i in range(n_vg):
             if self.mastermind.always_leads in vs.values() and not solo:
                 cls = self.mastermind.always_leads
+            elif self.scheme.always_leads in vs.values():
+                cls = self.scheme.always_leads
             else:
                 cls = self.rng.choice(vs.values())
             for k in vs.keys():
@@ -129,6 +131,8 @@ class Legendary(bg.BoardGame):
         for i in range(n_vh):
             if self.mastermind.always_leads in vhs.values() and not solo:
                 cls = self.mastermind.always_leads
+            elif self.scheme.always_leads in vhs.values():
+                cls = self.scheme.always_leads
             else:
                 cls = self.rng.choice(vhs.values())
             for k in vhs.keys():
@@ -270,6 +274,15 @@ class Legendary(bg.BoardGame):
                     actions.append(action.DiscardFrom(c, p.hand))
                 if len(actions) > 0:
                     self.choice(actions)
+
+    def find_highest_cost_hero(self):
+        index = None
+        cost = 0
+        for i in range(5):
+            if self.hq[i] is not None and cost <= self.hq[i].cost:
+                cost = self.hq[i].cost
+                index = i
+        return index
 
 
 

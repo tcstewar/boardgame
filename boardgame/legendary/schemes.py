@@ -3,6 +3,7 @@ import boardgame as bg
 from .core import *
 from . import action
 from . import tags
+from . import villains
 
 class UnleashCube(Scheme):
     name = 'Unleash the Power of the Cosmic Cube'
@@ -154,6 +155,78 @@ class NegativeZone(Scheme):
     def on_escape(self, card):
         if len(self.game.escaped) >= 12:
             self.game.evil_wins()
+
+
+class Killbot(Villain):
+    name = 'Killbot'
+    power = 3
+    victory = 1
+
+class ReplaceLeaders(Scheme):
+    name = "Replace Earth's Leaders with Killbots"
+    twists = 5
+    desc = ("Killbots have P3+ the number of twists. If 5 escape, evil wins.")
+    def adjust_bystander_count(self, count):
+        return 18
+    def on_start(self):
+        self.killbots = []
+        for i, card in enumerate(self.game.villain):
+            if isinstance(card, Bystander):
+                killbot = Killbot(self.game)
+                killbot.original = card
+                self.game.villain[i] = killbot
+                self.killbots.append(killbot)
+    def twist(self):
+        self.twists_done += 1
+        for k in self.killbots:
+            k.power += 1
+
+class Skrull(Villain):
+    name = 'Skrull'
+    def __init__(self, game, hero):
+        super(Skrull, self).__init__(game)
+        self.hero = hero
+        self.power = 2 + hero.cost
+    def on_fight(self, player):
+        self.game.event('%s gains %s' % (player.name, self.hero))
+        player.discard.append(self.hero)
+
+class SecretInvasion(Scheme):
+    name = "Secret Invasion of the Skrull Shapeshifters"
+    twists = 8
+    desc = ("Twist: Highest cost Hero from HQ become Skrull Villain. "
+            "If 6 Skrull Villains escape, evil wins.")
+    always_leads = villains.Skrulls
+    def adjust_hero_count(self, count):
+        return 6
+    def on_start(self):
+        for i in range(12):
+            hero = self.game.hero.pop(0)
+            skrull = Skrull(self.game, hero)
+            self.game.villain.append(skrull)
+    def twist(self):
+        self.twists_done += 1
+        index = self.game.find_highest_cost_hero()
+        if index is not None:
+            skrull = Skrull(self.game, self.game.hq[index])
+            self.game.hq[index] = None
+            self.game.fill_hq()
+            self.game.villain.insert(0, skrull)
+            self.game.play_villain()
+    def count_escaped(self):
+        count = 0
+        for card in self.game.escaped:
+            if isinstance(card, Skrull):
+                count += 1
+        return count
+    def on_escape(self, card):
+        if self.count_escaped() >= 6:
+            self.game.evil_wins()
+    def extra_text(self):
+        return '[%d]' % self.count_escaped()
+
+
+
 
 
 
