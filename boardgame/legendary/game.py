@@ -382,7 +382,7 @@ class Legendary(bg.BoardGame):
                                                       n_bystanders))
                 lines.append('<ul>')
                 for x in p.hand:
-                    lines.append('<li>%s' % x.text())
+                    lines.append('<li>%s' % x.html())
                 lines.append('</ul>')
                 lines.append('</div>')
             else:

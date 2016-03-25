@@ -205,6 +205,8 @@ class Wound(bg.Card):
         return self.name
     def text(self):
         return self.name
+    def html(self):
+        return '<strong>Wound</strong>'
     def on_play(self, player):
         pass
 
