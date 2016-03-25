@@ -48,7 +48,7 @@ class Villain(bg.Card):
                                         self.desc)
     def html(self):
         name = '<strong>%s</strong>' % self.name
-        group = ' &lt;%s&gt;' % selg.group.name if self.group is not None else ''
+        group = ' &lt;%s&gt;' % self.group.name if self.group is not None else ''
         ev = '+' if self.extra_victory else ''
         return '%s%s [P%d V%d%s] %s' % (name, group,
                                         self.power,
