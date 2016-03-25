@@ -46,6 +46,15 @@ class Villain(bg.Card):
                                         self.power,
                                         self.victory, ev,
                                         self.desc)
+    def html(self):
+        name = '<strong>%s</strong>' % self.name
+        group = ' &lt;%s&gt;' % selg.group.name if self.group is not None else ''
+        ev = '+' if self.extra_victory else ''
+        return '%s%s [P%d V%d%s] %s' % (name, group,
+                                        self.power,
+                                        self.victory, ev,
+                                        self.desc.replace('<','&lt;').replace('>','&gt;'))
+
 
 
 class VillainGroup(Group):
@@ -73,6 +82,8 @@ class Mastermind(bg.Card):
         self.game.scheme.on_capture(self, card)
     def text(self):
         return '%s [P%d] %s' % (self.name, self.power, self.desc)
+    def html(self):
+        return '<strong>%s</strong> [P%d] %s' % (self.name, self.power, self.desc)
     def __str__(self):
         return '%s (%d)' % (self.name, self.power)
 
@@ -88,6 +99,10 @@ class Scheme(bg.Card):
         extra = self.extra_text()
         return '%s (%d/%d) %s%s' % (self.name, self.twists_done, self.twists,
                                     self.desc, extra)
+    def html(self):
+        extra = self.extra_text()
+        return '<strong>%s</strong> (%d/%d) %s%s' % (self.name,
+                    self.twists_done, self.twists, self.desc, extra)
     def on_wound_empty(self):
         pass
     def extra_text(self):
@@ -154,6 +169,18 @@ class Hero(bg.Card):
                                         self.star, es,
                                         self.power, ep,
                                         self.desc)
+    def html(self):
+        name = '<strong>%s</strong>' % self.name
+        ep = '+' if self.extra_power else ''
+        es = '+' if self.extra_star else ''
+        tags = [t.short_name for t in self.tags]
+        tags = ' &lt;%s&gt;' % ','.join(tags) if len(tags) > 0 else ' '
+        return '%s%s [S%d%s P%d%s] %s' % (name,
+                                        tags,
+                                        self.star, es,
+                                        self.power, ep,
+                                        self.desc.replace('<','&lt;').replace('>','&gt;'))
+
 
     def __str__(self):
         ep = '+' if self.extra_power else ''

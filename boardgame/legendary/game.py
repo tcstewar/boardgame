@@ -344,6 +344,63 @@ class Legendary(bg.BoardGame):
 
         return '\n'.join(lines)
 
+    def html_state(self):
+        lines = []
+        lines.append('<ul><li>Mastermind: %s (%d/4)' % (self.mastermind.html(),
+                                                len(self.mastermind.tactics)))
+        lines.append('<li>Scheme: %s</ul>' % self.scheme.html())
+        lines.append('Escaped: %d' % len(self.escaped))
+        def text(x):
+            return x.html() if x is not None else '-----'
+        lines.append('<table>')
+        lines.append('<tr><td>Bridge</td><td>%s</td></tr>' % text(self.city[0]))
+        lines.append('<tr><td>Streets</td><td>%s</td></tr>' % text(self.city[1]))
+        lines.append('<tr><td>Rooftops</td><td>%s</td></tr>' % text(self.city[2]))
+        lines.append('<tr><td>Bank</td><td>%s</td></tr>' % text(self.city[3]))
+        lines.append('<tr><td>Sewers</td><td>%s</td></tr>' % text(self.city[4]))
+        lines.append('</table>')
+        lines.append('Villain Pile: %d' % len(self.villain))
+
+        lines.append('<table>')
+        for i in range(5):
+            if self.hq[i] is None:
+                lines.append('<tr><td>HQ %d</td><td>None</td></tr>' % (i + 1))
+            else:
+                lines.append('<tr><td>HQ %d (%d)</td><td>%s</td></tr>' % (i + 1, self.hq[i].cost,
+                                                  self.hq[i].html()))
+        lines.append('</table>')
+        lines.append('Hero Pile: %d' % len(self.hero))
+        for i, p in enumerate(self.players):
+            n_bystanders = len([b for b in p.victory_pile
+                                  if isinstance(b, Bystander)])
+            if p is self.current_player:
+                lines.append('<div class="current_player">')
+                lines.append('Player %d (current) [S%d P%d V%d B%d]' % (i+1,
+                                                      p.available_star,
+                                                      p.available_power,
+                                                      p.victory_points(),
+                                                      n_bystanders))
+                lines.append('<ul>')
+                for x in p.hand:
+                    lines.append('<li>%s' % x.text())
+                lines.append('</ul>')
+                lines.append('</div>')
+            else:
+                lines.append('<div class="other_player">')
+                hand = ', '.join(['%s' % x for x in p.hand])
+                lines.append('Player %d [V%d B%d]: %s' % (i+1,
+                                                      p.victory_points(),
+                                                      n_bystanders,
+                                                      hand))
+                lines.append('</div>')
+        lines.append('<ul>')
+        for event in self.recent_events:
+            lines.append('<li>%s</li>' % event)
+        lines.append('</ul>')
+
+        return '\n'.join(lines)
+
+
     def evil_wins(self):
         self.event('Evil Wins!')
         raise bg.FinishedException()
