@@ -187,6 +187,8 @@ class Player(object):
                 self.game.event('Rescued Bystander')
         else:
             if villain.captured:
+                for c in villain.captured:
+                    self.game.scheme.on_rescue(villain, c)
                 self.victory_pile.extend(villain.captured)
                 if len(villain.captured) == 1:
                     self.game.event('Rescued Bystander from %s' % villain.name)

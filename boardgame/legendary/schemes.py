@@ -98,6 +98,10 @@ class BankRobbery(Scheme):
             self.game.event('%s gains P+1 for capturing a Bystander' %
                             card.name)
             card.power += 1
+    def on_rescue(self, card, captured):
+        if isinstance(card, Villain) and isinstance(captured, Bystander):
+            card.power -= 1
+
 
 class PrisonOutbreak(Scheme):
     name = 'Negative Zone Prison Outbreak'

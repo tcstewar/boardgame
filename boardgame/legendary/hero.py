@@ -33,7 +33,7 @@ class IronMan(HeroGroup):
 class IronManArc(Hero):
     name = 'Iron Man: Arc Reactor'
     cost = 5
-    tags = [Tech, Avenger]
+    tags = [Avenger, Tech]
     power = 3
     extra_power = True
     desc = 'P+1 per other <Tec> played'
@@ -43,7 +43,7 @@ class IronManArc(Hero):
 class IronManEndless(Hero):
     name = 'Iron Man: Endless Intervention'
     cost = 3
-    tags = [Tech, Avenger]
+    tags = [Avenger, Tech]
     desc = 'Draw a card. <Tec>: Draw another card'
     def on_play(self, player):
         player.draw(1)
@@ -53,7 +53,7 @@ class IronManEndless(Hero):
 class IronManQuantum(Hero):
     name = 'Iron Man: Quantum Breakthrough'
     cost = 7
-    tags = [Tech, Avenger]
+    tags = [Avenger, Tech]
     desc = 'Draw two cards. <Tec>: Draw two more cards'
     def on_play(self, player):
         player.draw(2)
@@ -63,7 +63,7 @@ class IronManQuantum(Hero):
 class IronManRepulsor(Hero):
     name = 'Iron Man: Repulsor Rays'
     cost = 3
-    tags = [Ranged, Avenger]
+    tags = [Avenger, Ranged]
     power = 2
     extra_power = True
     desc = '<Rng>: P+1'
@@ -918,7 +918,7 @@ class GambitCharm(Hero):
                               action.ReturnFrom(cards[0], cards)])
         if player.count_played(tag=Instinct, ignore=self):
             for p in self.game.players:
-                if p is not self:
+                if p is not player:
                     cards = p.reveal(1)
                     if cards:
                         self.game.choice([action.DiscardFrom(cards[0],
@@ -1066,7 +1066,7 @@ class StormCyclone(Hero):
                     func=self.on_move,
                     kwargs=dict(villain=v, player=player)))
         if actions:
-            self.game.choice(actions)
+            self.game.choice(actions, allow_do_nothing=True)
     def on_move(self, villain, player):
         actions = []
         for i in range(5):

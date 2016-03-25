@@ -33,6 +33,8 @@ class DoNothing(Action):
 
 class UndoException(Exception):
     pass
+class ResetException(Exception):
+    pass
 class LoadException(Exception):
     def __init__(self, filename):
         self.filename = filename
@@ -145,6 +147,8 @@ class BoardGame(object):
                 self.forced_choices = choices[:]
             except LoadException as e:
                 self.load(e.filename)
+            except ResetException as e:
+                self.reset(seed=self.seed, *self.args, **self.kwargs)
             except FinishedException:
                 return
 

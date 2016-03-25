@@ -12,6 +12,8 @@ def text_choice(game, actions):
         s = raw_input('Choose: ')
         if s == 'u':
             raise bg.UndoException()
+        elif s == 'r':
+            raise bg.ResetException()
         elif s == 'l':
             raise bg.LoadException('autosave.sav')
         try:

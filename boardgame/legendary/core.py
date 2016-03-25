@@ -18,6 +18,7 @@ class Villain(bg.Card):
     extra_victory = None
     desc = ''
     original = None
+    tags = []
     def __init__(self, game):
         self.game = game
         self.captured = []
@@ -100,6 +101,8 @@ class Scheme(bg.Card):
     def adjust_hero_count(self, count):
         return count
     def on_capture(self, card, captured):
+        pass
+    def on_rescue(self, card, captured):
         pass
     def on_escape(self, card):
         pass
