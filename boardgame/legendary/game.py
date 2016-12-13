@@ -195,6 +195,7 @@ class Legendary(bg.BoardGame):
 
     def play_villain(self):
         if len(self.villain) == 0:
+            self.scheme.on_empty_villain()
             self.tie_game()
             return
         card = self.villain.pop(0)
@@ -346,6 +347,18 @@ class Legendary(bg.BoardGame):
 
     def html_state(self):
         lines = []
+        lines.append('''<style>
+                div#actions {
+                    background: #aa8c39;
+                }
+                div#actions li:hover {
+                    background: #d4b96a;
+                    cursor:pointer;
+                }
+                div#events {
+                    background: #8e79ad;
+                }
+                </style>''')
         lines.append('<ul><li>Mastermind: %s (%d/4)' % (self.mastermind.html(),
                                                 len(self.mastermind.tactics)))
         lines.append('<li>Scheme: %s</ul>' % self.scheme.html())
@@ -393,10 +406,10 @@ class Legendary(bg.BoardGame):
                                                       n_bystanders,
                                                       hand))
                 lines.append('</div>')
-        lines.append('<ul>')
+        lines.append('<div id="events"><ul>')
         for event in self.recent_events:
-            lines.append('<li>%s</li>' % event)
-        lines.append('</ul>')
+            lines.append('<li>%s</li>' % escape(event))
+        lines.append('</ul></div>')
 
         return '\n'.join(lines)
 

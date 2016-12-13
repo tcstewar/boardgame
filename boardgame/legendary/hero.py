@@ -982,7 +982,11 @@ class NickFuryPure(Hero):
             actions.append(bg.CustomAction('Defeat %s' % v.text(),
                 func=player.defeat,
                 kwargs=dict(villain=v)))
-        self.game.choice(actions)
+        if len(actions) > 0:
+            self.game.choice(actions)
+        else:
+            self.game.event('No Villians with P<%d' % count)
+
 
 class NickFuryCommander(Hero):
     name = 'Nick Fury: Legendary Commander'

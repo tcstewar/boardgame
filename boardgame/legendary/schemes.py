@@ -249,6 +249,41 @@ class DarkPortals(Scheme):
                 amount=1)
             self.game.add_handler('on_choice', adjust)
 
+class CloneSaga(Scheme):
+    name = "The Clone Saga"
+    twists = 8
+    desc = ("Twist: reveal 2 non-grey heros with same name or discard to 3. "
+            "Evil wins: 2 same name Villians Escape or Villan deck runs out.")
+    def twist(self):
+        self.twists_done += 1
+        for p in self.game.players:
+            safe = False
+            names = []
+            for c in p.hand:
+                if tags.Shield in c.tags:
+                    continue
+                if c.name in names:
+                    safe = True
+                    break
+                else:
+                    names.append(c.name)
+            if not safe:
+                while len(p.hand) > 3:
+                    actions = []
+                    for h in p.hand:
+                        actions.append(action.DiscardFrom(h, p.hand))
+                    self.game.choice(actions, player=p)
+    def on_escape(self, card):
+        for c in self.game.escaped:
+            if c.name == card.name:
+                self.game.evil_wins()
+    def on_empty_villain(self):
+        self.game.evil_wins()
+
+
+
+
+
 
 
 

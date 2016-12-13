@@ -64,6 +64,8 @@ class HeroGroup(Group):
 class Henchman(Villain):
     group = None
 
+def escape(text):
+    return text.replace('<','&lt;').replace('>','&gt;')
 
 class Tactic(bg.Card):
     group = None
@@ -83,7 +85,7 @@ class Mastermind(bg.Card):
     def text(self):
         return '%s [P%d] %s' % (self.name, self.power, self.desc)
     def html(self):
-        return '<strong>%s</strong> [P%d] %s' % (self.name, self.power, self.desc)
+        return '<strong>%s</strong> [P%d] %s' % (self.name, self.power, escape(self.desc))
     def __str__(self):
         return '%s (%d)' % (self.name, self.power)
 
@@ -102,7 +104,7 @@ class Scheme(bg.Card):
     def html(self):
         extra = self.extra_text()
         return '<strong>%s</strong> (%d/%d) %s%s' % (self.name,
-                    self.twists_done, self.twists, self.desc, extra)
+                    self.twists_done, self.twists, escape(self.desc), extra)
     def on_wound_empty(self):
         pass
     def extra_text(self):
@@ -122,6 +124,8 @@ class Scheme(bg.Card):
     def on_escape(self, card):
         pass
     def on_empty_hero(self):
+        pass
+    def on_empty_villian(self):
         pass
 
 class SchemeTwist(bg.Card):

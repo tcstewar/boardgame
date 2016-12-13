@@ -20,13 +20,17 @@ class GameRunner(threading.Thread):
         self.latest_state_event.set()
 
     def get_action_html(self):
-        x = ['<li onclick="do_action(%d);">%s</li>' % (i, str(a).replace('<', '&lt;').replace('>', '&gt;')) for i, a in enumerate(self.latest_actions)]
-        x.append('''<li onclick="do_action('u');">Undo</li>''')
-        #x.append('''<li onclick="do_action('r');">Reset</li>''')
+        if self.latest_actions is None:
+            x = []
+        else:
+            x = ['<li onclick="do_action(%d);">%s</li>' % (i, str(a).replace('<', '&lt;').replace('>', '&gt;')) for i, a in enumerate(self.latest_actions)]
+            x.append('''<li onclick="do_action('u');">Undo</li>''')
+            #x.append('''<li onclick="do_action('r');">Reset</li>''')
         return '<ul>%s</ul>' % ''.join(x)
 
     def run(self):
         self.game.run(self.selector)
+        self.set_state(self.game.html_state(), None)
 
     def selector(self, game, actions):
         self.set_state(game.html_state(), actions)
@@ -74,7 +78,6 @@ class Server(boardgame.swi.SimpleWebInterface):
                 var d = JSON.parse(event.data);
                 statediv.innerHTML = d.state;
                 actionsdiv.innerHTML = d.actions
-                console.log(d);
             }
             function do_action(number) {
                 ws2.send(number);
