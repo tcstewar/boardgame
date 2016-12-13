@@ -125,7 +125,7 @@ class Scheme(bg.Card):
         pass
     def on_empty_hero(self):
         pass
-    def on_empty_villian(self):
+    def on_empty_villain(self):
         pass
 
 class SchemeTwist(bg.Card):
@@ -192,6 +192,8 @@ class Hero(bg.Card):
         return '[S%d%s P%d%s] %s' % (self.star, es, self.power, ep, self.name)
     def on_play(self, player):
         pass
+    def on_discard(self, player):
+        pass
 
 class Tag(object):
     def __init__(self, name, short_name):
@@ -212,6 +214,8 @@ class Wound(bg.Card):
     def html(self):
         return '<strong>Wound</strong>'
     def on_play(self, player):
+        pass
+    def on_discard(self, player):
         pass
 
 class Handler(object):

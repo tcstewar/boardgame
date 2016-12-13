@@ -56,6 +56,7 @@ class Player(object):
             #TODO: make this an option
             self.game.event('%s returned to hand' % card)
         else:
+            card.on_discard(self)
             self.discard.append(card)
             location.remove(card)
 

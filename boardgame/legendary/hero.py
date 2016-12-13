@@ -1111,7 +1111,73 @@ class StormGathering(Hero):
             player.draw(1)
 
 
+class Angel(HeroGroup):
+    name = 'Angel'
+    def fill(self):
+        self.add(AngelStrengthOfSpirit, 1)
+        self.add(AngelDropOffAFriend, 3)
+        self.add(AngelDivingCatch, 5)
+        self.add(AngelHighSpeedChase, 5)
 
+class AngelStrengthOfSpirit(Hero):
+    name = 'Angel: Strength of Spirit'
+    cost = 7
+    power = 4
+    tags = [XMen, Strength]
+    desc = ("Discard any number of cards. Draw that many cards.")
+    def on_play(self, player):
+        count = 0
+        while len(player.hand) > 0:
+            actions = []
+            for h in player.hand:
+                actions.append(action.DiscardFrom(h, player.hand))
+            choice = self.game.choice(actions, player=player,
+                                      allow_do_nothing=True)
+            if choice is None:
+                break
+            else:
+                count += 1
+        player.draw(count)
+
+class AngelDropOffAFriend(Hero):
+    name = 'Angel: Drop Off a Friend'
+    cost = 5
+    power = 2
+    extra_power = True
+    tags = [XMen, Instinct]
+    desc = ("You may discard a card. P+ that card's cost.")
+    def on_play(self, player):
+        if len(player.hand) > 0:
+            actions = []
+            for h in player.hand:
+                actions.append(action.DiscardFrom(h, player.hand,
+                                                  show_cost=True))
+            choice = self.game.choice(actions, player=player,
+                                      allow_do_nothing=True)
+            if choice is not None:
+                player.available_power += choice.card.cost
+
+class AngelDivingCatch(Hero):
+    name = 'Angel: Diving Catch'
+    cost = 4
+    star = 2
+    tags = [XMen, Strength]
+    desc = ("If this card discarded, rescue Bystander and draw 2 cards.")
+    def on_discard(self, player):
+        player.rescue_bystander()
+        player.draw(2)
+
+class AngelHighSpeedChase(Hero):
+    name = 'Angel: High Speed Chase'
+    cost = 3
+    tags = [XMen, Covert]
+    desc = ("Draw 2 cards, then discard 1 card.")
+    def on_play(self, player):
+        player.draw(2)
+        actions = []
+        for h in player.hand:
+            actions.append(action.DiscardFrom(h, player.hand))
+        self.game.choice(actions, player=player)
 
 
 

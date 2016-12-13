@@ -204,9 +204,13 @@ class ReplaceFromHQ(bg.Action):
 
 class DiscardFrom(bg.Action):
     def __str__(self):
-        return 'Discard %s' % self.card
-    def __init__(self, card, location, player=None):
+        extra = ''
+        if self.show_cost:
+            extra = extra + ' (cost:%d)' % self.card.cost
+        return 'Discard %s%s' % (self.card, extra)
+    def __init__(self, card, location, player=None, show_cost=False):
         self.card = card
+        self.show_cost = show_cost
         self.player = player
         self.location = location
     def valid(self, game, player):
