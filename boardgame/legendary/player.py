@@ -32,6 +32,7 @@ class Player(object):
         self.draw_new_hand()
         self.handlers = {}
         self.handlers['on_fight'] = []
+        self.handlers['on_ko'] = []
 
     def clear_handlers(self):
         for v in self.handlers.values():
@@ -203,6 +204,9 @@ class Player(object):
     def on_fight(self, enemy):
         for x in self.handlers['on_fight']:
             x(enemy)
+    def on_ko(self, card):
+        for x in self.handlers['on_ko']:
+            x(card)
 
     def ko_hero_from(self, *locations):
         actions = []

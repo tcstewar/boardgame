@@ -1174,13 +1174,85 @@ class AngelHighSpeedChase(Hero):
     desc = ("Draw 2 cards, then discard 1 card.")
     def on_play(self, player):
         player.draw(2)
-        actions = []
-        for h in player.hand:
-            actions.append(action.DiscardFrom(h, player.hand))
-        self.game.choice(actions, player=player)
+        if len(player.hand) > 0:
+            actions = []
+            for h in player.hand:
+                actions.append(action.DiscardFrom(h, player.hand))
+            self.game.choice(actions, player=player)
 
+class Bishop(HeroGroup):
+    name = 'Bishop'
+    def fill(self):
+        self.add(BishopFirepowerFromTheFuture, 1)
+        self.add(BishopConcussiveBlast, 3)
+        self.add(BishopAbsorbEnergies, 5)
+        self.add(BishopWhateverTheCost, 5)
 
+class BishopFirepowerFromTheFuture(Hero):
+    name = 'Bishop: Firepower From the Future'
+    cost = 7
+    power = 4
+    extra_power = True
+    tags = [XMen, Tech]
+    desc = ("Discard top 4 cards from deck; gain P+ equal to cards' P. "
+            "<Xmn> KO any of those 4 cards.")
+    def on_play(self, player):
+        cards = player.draw(4, put_in_hand=False,
+                            count_draw=False, event_message=False)
+        for c in cards:
+            player.available_power += c.power
 
+        if player.count_played(XMen, ignore=self):
+            while len(cards) > 0:
+                actions = []
+                for c in cards:
+                    actions.append(action.KOFrom(c, cards))
+                choice = self.game.choice(actions, player=player,
+                                          allow_do_nothing=True)
+                if choice is None:
+                    break
 
+        for c in cards:
+            player.discard_from(c, cards)
 
+class BishopConcussiveBlast(Hero):
+    name = 'Bishop: Concussive Blast'
+    cost = 5
+    power = 3
+    extra_power = True
+    tags = [XMen, Ranged]
+    desc = ("<Rng><Rng> P+3")
 
+    def on_play(self, player):
+        if player.count_played(Ranged, ignore=self) >= 2:
+            player.available_power += 3
+
+class BishopAbsorbEnergies(Hero):
+    name = 'Bishop: Absorb Energies'
+    cost = 3
+    power = 2
+    extra_star = True
+    tags = [XMen, Covert]
+    desc = ("Whenever card you own is KO'd this turn, S+2")
+
+    def on_play(self, player):
+        def on_ko(card):
+            player.available_star +=2
+        player.handlers['on_ko'].append(on_ko)
+
+class BishopWhateverTheCost(Hero):
+    name = 'Bishop: Whatever the Cost'
+    cost = 2
+    tags = [XMen, Ranged]
+    desc = ("Draw a card.  <Cov>: You may KO a card from hand or discard pile")
+
+    def on_play(self, player):
+        player.draw(1)
+        if player.count_played(Covert, ignore=self):
+            actions = []
+            for c in player.hand:
+                actions.append(action.KOFrom(c, player.hand))
+            for c in player.discard:
+                actions.append(action.KOFrom(c, player.discard))
+            choice = self.game.choice(actions, player=player,
+                                      allow_do_nothing=True)

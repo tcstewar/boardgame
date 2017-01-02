@@ -169,6 +169,7 @@ class KOFrom(bg.Action):
         return self.card in self.location
     def perform(self, game, player):
         game.ko.append(self.card)
+        player.on_ko(self.card)
         if self.location is game.hq:
             game.hq[game.hq.index(self.card)] = None
             game.fill_hq()
@@ -185,6 +186,7 @@ class KOFromHQ(bg.Action):
     def perform(self, game, player):
         index = game.hq.index(self.card)
         game.ko.append(self.card)
+        player.on_ko(self.card)
         game.hq[index] = None
         game.fill_hq()
 
