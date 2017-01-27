@@ -559,3 +559,88 @@ class TheLeader(Villain):
     desc = "Ambush: Play the top Villain card."
     def on_ambush(self):
         self.game.play_villain()
+
+class FourHorsemen(VillainGroup):
+    name = 'Four Horsemen'
+    def fill(self):
+        self.add(Death, 2)
+        self.add(War, 2)
+        self.add(Pestilence, 2)
+        self.add(Famine, 2)
+
+class Death(Villain):
+    name = 'Death'
+    power = 7
+    victory = 5
+    desc = ("Fight: Each other player KOs a hero of cost 1 or more. "
+            "Escape: Each player does the same.")
+    def on_fight(self, player):
+        for p in player.other_players():
+            self.punish(p)
+    def on_escape(self):
+        for p in self.game.players:
+            self.punish(p)
+    def punish(self, p):
+        actions = []
+        for c in p.hand:
+            if c.cost >= 1:
+                actions.append(action.KOFrom(c, p.hand))
+        if len(actions) > 0:
+            self.game.choice(actions)
+
+class War(Villain):
+    name = 'War'
+    power = 6
+    victory = 4
+    desc = ("Fight: Each other player reveals <Ins> or gains Wound. "
+            "Escape: Each player does the same.")
+    def on_fight(self, player):
+        for p in player.other_players():
+            self.punish(p)
+    def on_escape(self):
+        for p in self.game.players:
+            self.punish(p)
+    def punish(self, p):
+        actions = []
+        if p.reveal_tag(tags.Instinct) is None:
+            p.gain_wound(wounder=self)
+
+class Pestilence(Villain):
+    name = 'Pestilence'
+    power = 5
+    victory = 3
+    desc = ("Fight: Each other player reveals top 3 cards, discards C>0, puts "
+            "rest back in any order. Escape: Each player does the same.")
+    def on_fight(self, player):
+        for p in player.other_players():
+            self.punish(p)
+    def on_escape(self):
+        for p in self.game.players:
+            self.punish(p)
+    def punish(self, p):
+        cards = p.reveal(3)
+        for c in cards:
+            if c.cost > 0:
+                p.discard_from(c, cards)
+        while len(cards) > 0:
+            actions = [action.ReturnFrom(c, cards) for c in cards]
+            self.game.choice(actions)
+
+class Famine(Villain):
+    name = 'Famine'
+    power = 4
+    victory = 2
+    desc = ("Fight: Each other player reveals <Ins> or discards a card. "
+            "Escape: Each player does the same.")
+    def on_fight(self, player):
+        for p in player.other_players():
+            self.punish(p)
+    def on_escape(self):
+        for p in self.game.players:
+            self.punish(p)
+    def punish(self, p):
+        actions = []
+        if p.reveal_tag(tags.Instinct) == 0:
+            actions = [action.DiscardFrom(c, p.hand) for c in p.hand]
+            self.game.choice(actions)
+
