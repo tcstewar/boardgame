@@ -206,6 +206,8 @@ class Wound(bg.Card):
     name = 'Wound'
     power = 0
     star = 0
+    extra_star = False
+    extra_power = False
     cost = 0
     tags = []
     return_from_discard = False

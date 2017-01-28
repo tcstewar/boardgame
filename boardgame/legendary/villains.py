@@ -652,3 +652,78 @@ class MaggiaGoons(Henchman):
     desc = 'Bribe. Fight: KO one of your Heroes.'
     def on_fight(self, player):
         player.ko_hero_from(player.hand, player.played)
+
+class StreetsOfNewYork(VillainGroup):
+    name = 'Streets of New York'
+    def fill(self):
+        self.add(Jigsaw, 2)
+        self.add(Tombstone, 2)
+        self.add(Bullseye, 2)
+        self.add(Hammerhead, 2)
+
+class Jigsaw(Villain):
+    name = 'Jigsaw'
+    power = 11
+    victory = 5
+    bribe = True
+    desc = ("Bribe. Ambush: Each player discards 3 cards, then draws 2 cards.")
+    def on_ambush(self):
+        for p in self.game.players:
+            for i in range(3):
+                if len(p.hand) > 0:
+                    actions = [action.DiscardFrom(c, p.hand) for c in p.hand]
+                    self.game.choice(actions)
+            p.draw(2)
+
+class Tombstone(Villain):
+    name = 'Tombstone'
+    power = 8
+    victory = 4
+    bribe = True
+    desc = ("Bribe. Escape: Each player reveals <Str> or gains a Wound.")
+    def on_escape(self):
+        for p in self.game.players:
+            if p.reveal_tag(tags.Strength) is None:
+                p.gain_wound(wounder=self)
+
+class Bullseye(Villain):
+    name = 'Bullseye'
+    power = 6
+    victory = 4
+    desc = ("Fight: KO one Hero with S icon and one Hero with P icon.")
+    def on_fight(self, player):
+        actions = []
+        for c in player.hand:
+            if c.star > 0 or c.extra_star:
+                actions.append(action.KOFrom(c, player.hand))
+        for c in player.played:
+            if c.star > 0 or c.extra_star:
+                actions.append(action.KOFrom(c, player.played))
+        if len(actions) > 0:
+            self.game.choice(actions)
+        actions = []
+        for c in player.hand:
+            if c.power > 0 or c.extra_power:
+                actions.append(action.KOFrom(c, player.hand))
+        for c in player.played:
+            if c.power > 0 or c.extra_power:
+                actions.append(action.KOFrom(c, player.played))
+        if len(actions) > 0:
+            self.game.choice(actions)
+
+class Hammerhead(Villain):
+    name = 'Hammerhead'
+    power = 5
+    victory = 2
+    bribe = True
+    desc = ("Bribe. Fight: KO one Hero with S icon.")
+    def on_fight(self, player):
+        actions = []
+        for c in player.hand:
+            if c.star > 0 or c.extra_star:
+                actions.append(action.KOFrom(c, player.hand))
+        for c in player.played:
+            if c.star > 0 or c.extra_star:
+                actions.append(action.KOFrom(c, player.played))
+        if len(actions) > 0:
+            self.game.choice(actions)
