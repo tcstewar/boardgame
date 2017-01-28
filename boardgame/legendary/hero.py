@@ -10,17 +10,20 @@ class ShieldAgent(Hero):
     name = 'SHIELD Agent'
     star = 1
     tags = [Shield]
+    grey = True
 
 class ShieldTrooper(Hero):
     name = 'SHIELD Trooper'
     power = 1
     tags = [Shield]
+    grey = True
 
 class ShieldOfficer(Hero):
     name = 'SHIELD Officer'
     star = 2
     cost = 3
     tags = [Shield]
+    grey = True
 
 class IronMan(HeroGroup):
     name = 'Iron Man'

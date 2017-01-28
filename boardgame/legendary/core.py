@@ -163,6 +163,7 @@ class Hero(bg.Card):
     tags = []
     desc = ''
     return_from_discard = False
+    grey = False
 
     def text(self):
         name = '%35s' % self.name
@@ -210,6 +211,7 @@ class Wound(bg.Card):
     extra_power = False
     cost = 0
     tags = []
+    grey = False
     return_from_discard = False
     def __str__(self):
         return self.name

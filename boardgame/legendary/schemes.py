@@ -253,17 +253,18 @@ class CloneSaga(Scheme):
     name = "The Clone Saga"
     twists = 8
     desc = ("Twist: reveal 2 non-grey heros with same name or discard to 3. "
-            "Evil wins: 2 same name Villians Escape or Villan deck runs out.")
+            "Evil wins: 2 same name Villains Escape or Villain deck runs out.")
     def twist(self):
         self.twists_done += 1
         for p in self.game.players:
             safe = False
             names = []
             for c in p.hand:
-                if tags.Shield in c.tags:
+                if not isinstance(c, Hero) or c.grey:
                     continue
                 if c.name in names:
                     safe = True
+                    self.game.event('Protected by %s clones' % c.name)
                     break
                 else:
                     names.append(c.name)
@@ -275,7 +276,7 @@ class CloneSaga(Scheme):
                     self.game.choice(actions, player=p)
     def on_escape(self, card):
         for c in self.game.escaped:
-            if c.name == card.name:
+            if (c is not card) and (c.name == card.name):
                 self.game.evil_wins()
     def on_empty_villain(self):
         self.game.evil_wins()
