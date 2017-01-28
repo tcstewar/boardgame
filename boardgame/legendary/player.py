@@ -248,10 +248,7 @@ class Player(object):
         minimum = max(minimum, 0)
         maximum = min(maximum, self.available_star)
 
-        if maximum == minimum:
-            return maximum
-
-        assert maximum > minimum
+        assert maximum >= minimum
 
         actions = []
         for i in reversed(range(minimum, maximum + 1)):

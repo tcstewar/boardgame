@@ -127,16 +127,19 @@ class Fight(bg.Action):
         power = player.available_power
         if player.can_use_star_as_power:
             power += player.available_star
-        if (power >= game.mastermind.power):
+        max_bribe = player.available_star if game.mastermind.bribe else 0
+        if (power + max_bribe >= game.mastermind.power):
             if hasattr(game.scheme, 'valid_fight_mastermind'):
                 if game.scheme.valid_fight_mastermind(player):
                     return True
             else:
                 return True
-        cards = [h for h in game.city
-                   if h is not None and
-                      h.power <= power and
-                      h.can_fight(player)]
+        cards = []
+        for h in game.city:
+            if h is not None:
+                max_bribe = player.available_star if h.bribe else 0
+                if h.power <= power + max_bribe and h.can_fight(player):
+                    cards.append(h)
         return len(cards) > 0
     def perform(self, game, player):
         actions = []
@@ -144,18 +147,19 @@ class Fight(bg.Action):
         power = player.available_power
         if player.can_use_star_as_power:
             power += player.available_star
+        max_bribe = player.available_star if game.mastermind.bribe else 0
 
-        if (power >= game.mastermind.power):
+        if (power + max_bribe >= game.mastermind.power):
             if hasattr(game.scheme, 'valid_fight_mastermind'):
                 if game.scheme.valid_fight_mastermind(player):
                     actions.append(FightMastermind(game.mastermind))
             else:
                 actions.append(FightMastermind(game.mastermind))
         for h in game.city:
-            if (h is not None and
-                    h.power <= power and
-                    h.can_fight(player)):
-                actions.append(FightVillain(h))
+            if h is not None:
+                max_bribe = player.available_star if h.bribe else 0
+                if h.power <= power + max_bribe and h.can_fight(player):
+                    actions.append(FightVillain(h))
         game.choice(actions)
 
 
@@ -317,12 +321,12 @@ class FightVillain(bg.Action):
         self.card = card
     def valid(self, game, player):
         power = player.available_power
-        if player.can_use_star_as_power:
+        if player.can_use_star_as_power or self.card.bribe:
             power += player.available_star
         return (power >= self.card.power and
                 self.card.can_fight(player))
     def perform(self, game, player):
-        if player.can_use_star_as_power:
+        if player.can_use_star_as_power or self.card.bribe:
             minimum = self.card.power - player.available_power
             maximum = self.card.power
             star = player.choose_star_usage(minimum, maximum)
@@ -344,11 +348,11 @@ class FightMastermind(bg.Action):
             if not game.scheme.valid_fight_mastermind(player):
                 return False
         power = player.available_power
-        if player.can_use_star_as_power:
+        if player.can_use_star_as_power or self.card.bribe:
             power += player.available_star
         return power >= self.card.power
     def perform(self, game, player):
-        if player.can_use_star_as_power:
+        if player.can_use_star_as_power or self.card.bribe:
             minimum = self.card.power - player.available_power
             maximum = self.card.power
             star = player.choose_star_usage(minimum, maximum)

@@ -644,3 +644,11 @@ class Famine(Villain):
             actions = [action.DiscardFrom(c, p.hand) for c in p.hand]
             self.game.choice(actions)
 
+class MaggiaGoons(Henchman):
+    name = 'Maggia Goons'
+    power = 4
+    victory = 1
+    bribe = True
+    desc = 'Bribe. Fight: KO one of your Heroes.'
+    def on_fight(self, player):
+        player.ko_hero_from(player.hand, player.played)

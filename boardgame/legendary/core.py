@@ -13,6 +13,7 @@ class Group(object):
 
 class Villain(bg.Card):
     group = None
+    bribe = False
     power = 0
     victory = 0
     extra_victory = None
@@ -76,6 +77,7 @@ class Tactic(bg.Card):
         return '%s: %s' % (self.name, self.desc)
 
 class Mastermind(bg.Card):
+    bribe = False
     def __init__(self, game):
         super(Mastermind, self).__init__(game)
         self.captured = []
