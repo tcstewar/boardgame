@@ -182,6 +182,7 @@ class KOFrom(bg.Action):
     def perform(self, game, player):
         game.ko.append(self.card)
         player.on_ko(self.card)
+        game.scheme.on_ko(self.card)
         if self.location is game.hq:
             game.hq[game.hq.index(self.card)] = None
             game.fill_hq()
@@ -199,6 +200,7 @@ class KOFromHQ(bg.Action):
         index = game.hq.index(self.card)
         game.ko.append(self.card)
         player.on_ko(self.card)
+        game.scheme.on_ko(self.card)
         game.hq[index] = None
         game.fill_hq()
 
@@ -237,16 +239,20 @@ class DiscardFrom(bg.Action):
 class GainFrom(bg.Action):
     def __str__(self):
         return 'Gain %s' % self.card
-    def __init__(self, card, location, player=None):
+    def __init__(self, card, location, player=None, to_hand=False):
         self.card = card
         self.location = location
         self.player = player
+        self.to_hand = to_hand
     def valid(self, game, player):
         return self.card in self.location
     def perform(self, game, player):
         if self.player is not None:
             player = self.player
-        player.discard.append(self.card)
+        if self.to_hand:
+            player.hand.append(self.card)
+        else:
+            player.discard.append(self.card)
         if self.location is game.hq:
             game.hq[game.hq.index(self.card)] = None
             game.fill_hq()

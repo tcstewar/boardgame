@@ -281,6 +281,43 @@ class CloneSaga(Scheme):
     def on_empty_villain(self):
         self.game.evil_wins()
 
+class BatheEarthInCosmicRays(Scheme):
+    name = "Bathe Earth in Cosmic Rays"
+    twists = 6
+    desc = ("Twist: Each player KOs 1 non-grey Hero from hand.  Gain a Hero "
+            "from HQ with <=C to hand. "
+            "Evil wins: # non-grey KO'd Heros = 6* # players")
+    def twist(self):
+        self.twists_done += 1
+        for p in self.game.players:
+            actions = []
+            for c in p.hand:
+                if isinstance(c, Hero) and not c.grey:
+                    actions.append(action.KOFrom(c, p.hand))
+            if len(actions) > 0:
+                c = self.game.choice(actions, player=p)
+                actions = []
+                for cc in self.game.hq:
+                    if cc is not None and cc.cost <= c.card.cost:
+                        actions.append(action.GainFrom(cc, self.game.hq,
+                                                       p, to_hand=True))
+                if len(actions) > 0:
+                    self.game.choice(actions, player=p)
+    def on_ko(self, card):
+        count = self.count_ko()
+        if count >= 6 * len(self.game.players):
+            self.game.evil_wins()
+
+    def count_ko(self):
+        count = 0
+        for c in self.game.ko:
+            if isinstance(c, Hero) and not c.grey:
+                count += 1
+        return count
+
+    def extra_text(self):
+        return '[%d]' % self.count_ko()
+
 
 
 

@@ -129,6 +129,8 @@ class Scheme(bg.Card):
         pass
     def on_empty_villain(self):
         pass
+    def on_ko(self, card):
+        pass
 
 class SchemeTwist(bg.Card):
     def __str__(self):
