@@ -125,9 +125,10 @@ class Fight(bg.Action):
         if game.state is not DuringTurn:
             return False
         power = player.available_power
+        max_bribe = player.available_star if game.mastermind.bribe else 0
         if player.can_use_star_as_power:
             power += player.available_star
-        max_bribe = player.available_star if game.mastermind.bribe else 0
+            max_bribe = 0
         if (power + max_bribe >= game.mastermind.power):
             if hasattr(game.scheme, 'valid_fight_mastermind'):
                 if game.scheme.valid_fight_mastermind(player):
@@ -137,7 +138,10 @@ class Fight(bg.Action):
         cards = []
         for h in game.city:
             if h is not None:
-                max_bribe = player.available_star if h.bribe else 0
+                if player.can_use_star_as_power:
+                    max_bribe = 0
+                else:
+                    max_bribe = player.available_star if h.bribe else 0
                 if h.power <= power + max_bribe and h.can_fight(player):
                     cards.append(h)
         return len(cards) > 0
@@ -145,9 +149,10 @@ class Fight(bg.Action):
         actions = []
 
         power = player.available_power
+        max_bribe = player.available_star if game.mastermind.bribe else 0
         if player.can_use_star_as_power:
             power += player.available_star
-        max_bribe = player.available_star if game.mastermind.bribe else 0
+            max_bribe = 0
 
         if (power + max_bribe >= game.mastermind.power):
             if hasattr(game.scheme, 'valid_fight_mastermind'):
@@ -157,7 +162,10 @@ class Fight(bg.Action):
                 actions.append(FightMastermind(game.mastermind))
         for h in game.city:
             if h is not None:
-                max_bribe = player.available_star if h.bribe else 0
+                if player.can_use_star_as_power:
+                    max_bribe = 0
+                else:
+                    max_bribe = player.available_star if h.bribe else 0
                 if h.power <= power + max_bribe and h.can_fight(player):
                     actions.append(FightVillain(h))
         game.choice(actions)
