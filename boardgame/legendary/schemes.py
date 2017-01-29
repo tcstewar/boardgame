@@ -102,12 +102,10 @@ class BankRobbery(Scheme):
         if isinstance(card, Villain) and isinstance(captured, Bystander):
             card.power -= 1
 
-
-class PrisonOutbreak(Scheme):
-    name = 'Negative Zone Prison Outbreak'
+class NegativeZonePrisonBreakout(Scheme):
+    name = 'Negative Zone Prison Breakout'
+    desc = ("Twist: Play 2 Villains. If 12 Villains escape, Evil Wins.")
     twists = 8
-    desc = ("Add extra Henchman group. Twist: Play 2 Villains. "
-            "If 12 Villains escape, evil wins.")
     def adjust_henchman_count(self, count):
         return count + 1
     def twist(self):
@@ -117,6 +115,7 @@ class PrisonOutbreak(Scheme):
     def on_escape(self, card):
         if len(self.game.escaped) >= 12:
             self.game.evil_wins()
+
 
 class CivilWar(Scheme):
     name = 'Super Hero Civil War'
@@ -146,22 +145,6 @@ class CivilWar(Scheme):
         self.game.fill_hq()
     def on_empty_hero(self):
         self.game.evil_wins()
-
-class NegativeZone(Scheme):
-    name = 'Negative Zone Prison Breakout'
-    allow_solo = False
-    desc = ("Twist: Play top 2 Villains. If 12 Villains escape, evil wins.")
-    twists = 8
-    def adjust_henchman_count(self, count):
-        return count + 1
-    def twist(self):
-        self.twists_done += 1
-        self.game.play_villain()
-        self.game.play_villain()
-    def on_escape(self, card):
-        if len(self.game.escaped) >= 12:
-            self.game.evil_wins()
-
 
 class Killbot(Villain):
     name = 'Killbot'
