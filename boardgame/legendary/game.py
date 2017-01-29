@@ -194,12 +194,13 @@ class Legendary(bg.BoardGame):
                     repeat=True)
 
 
-    def play_villain(self):
-        if len(self.villain) == 0:
-            self.scheme.on_empty_villain()
-            self.tie_game()
-            return
-        card = self.villain.pop(0)
+    def play_villain(self, card=None):
+        if card is None:
+            if len(self.villain) == 0:
+                self.scheme.on_empty_villain()
+                self.tie_game()
+                return
+            card = self.villain.pop(0)
         if isinstance(card, Villain):
             self.shift_city()
             self.event('A new Villain enters the city: %s' % card)

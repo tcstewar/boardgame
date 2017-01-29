@@ -1130,12 +1130,20 @@ class AngelStrengthOfSpirit(Hero):
     desc = ("Discard any number of cards. Draw that many cards.")
     def on_play(self, player):
         count = 0
-        while len(player.hand) > 0:
+        original_hand = list(player.hand)
+        while True:
             actions = []
             for h in player.hand:
-                actions.append(action.DiscardFrom(h, player.hand))
+                #TODO: this card should finish before discarding sideeffects
+                # trigger (this holds for all cards and may require lots
+                # of tweaking throughout the code!)
+                if h in original_hand:
+                    actions.append(action.DiscardFrom(h, player.hand))
+            if len(actions) == 0:
+                break
             choice = self.game.choice(actions, player=player,
                                       allow_do_nothing=True)
+            original_hand.remove(choice.card)
             if choice is None:
                 break
             else:

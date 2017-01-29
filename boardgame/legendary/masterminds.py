@@ -294,3 +294,101 @@ class MagnetoTactic4(Tactic):
         if len(actions) > 0:
             self.game.choice(actions)
 
+class Kingpin(Mastermind):
+    name = 'Kingpin'
+    desc = ('Master Strike: Each player reveals <MKn> or '
+            'discards hand and draws 5')
+
+    always_leads = villains.StreetsOfNewYork
+    power = 13
+    bribe = True
+
+    def __init__(self, game):
+        super(Kingpin, self).__init__(game)
+        self.tactics = [KingpinTactic1(game), KingpinTactic2(game),
+                        KingpinTactic3(game), KingpinTactic4(game)]
+        self.game.rng.shuffle(self.tactics)
+
+    def strike(self):
+        for p in self.game.players:
+            if p.reveal_tag(tags.MKnight) is None:
+                for c in p.hand[:]:
+                    p.discard_from(c, p.hand)
+                p.draw(5)
+
+class KingpinTactic1(Tactic):
+    name = "Call a Hit"
+    desc = "Choose a Hero from each player's discard pile and KO it."
+    victory = 6
+    def on_fight(self, player):
+        for p in self.game.players:
+            actions = []
+            for c in p.discard:
+                if isinstance(c, Hero):
+                    actions.append(action.KOFrom(c, p.discard))
+            if len(actions) > 0:
+                self.game.choice(actions, player=player)
+
+class KingpinTactic2(Tactic):
+    name = "Criminal Empire"
+    desc = ("If not last tactic, reveal top 3 cards in Villain deck. "
+            "Play all Villains revealed and return others in random order.")
+    victory = 6
+    def on_fight(self, player):
+        if len(self.game.mastermind.tactics) > 0:
+            cards = []
+            for i in range(3):
+                if len(self.game.villain) == 0:
+                    self.game.play_villain()  # trigger game end
+                card = self.game.villain.pop(0)
+                if isinstance(card, Villain):
+                    self.game.play_villain(card)
+                else:
+                    self.game.event('Revealed %s' % card)
+                    cards.append(card)
+            self.game.rng.shuffle(cards)
+            for c in cards:
+                self.game.villain.insert(0, c)
+
+class KingpinTactic3(Tactic):
+    name = "Dirty Cops"
+    desc = ("Put a 0 cost Hero from the KO pile on top of each other "
+            "player's deck.")
+    victory = 6
+    def on_fight(self, player):
+        for p in player.other_players():
+            #TODO: allow choice of order for doing this
+            actions = []
+            for c in self.game.ko:
+                if isinstance(c, Hero) and c.cost == 0:
+                    actions.append(bg.CustomAction(
+                                        "Put %s on %s's deck" % (c, p.name),
+                                        func=self.dirty_cop,
+                                        args=(c, p)))
+            if len(actions) > 0:
+                self.game.choice(actions)
+
+    def dirty_cop(self, card, player):
+        self.game.ko.remove(card)
+        player.stack.insert(0, card)
+
+class KingpinTactic4(Tactic):
+    name = "Mob War"
+    desc = ("Each other player plays a Henchman from their Victory pile "
+            "as if playing it fro the Villain deck.")
+    victory = 6
+    def on_fight(self, player):
+        for p in player.other_players():
+            #TODO: allow choice of order for doing this
+            actions = []
+            for c in p.victory_pile:
+                if isinstance(c, Henchman):
+                    actions.append(bg.CustomAction("Play Henchman %s" % c,
+                                                   func=self.mob_war,
+                                                   args=(c, p)))
+            if len(actions) > 0:
+                self.game.choice(actions, player=p)
+
+    def mob_war(self, card, player):
+        player.victory_pile.remove(card)
+        self.game.play_villain(card)
