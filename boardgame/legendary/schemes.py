@@ -269,11 +269,7 @@ class CloneSaga(Scheme):
                 else:
                     names.append(c.name)
             if not safe:
-                while len(p.hand) > 3:
-                    actions = []
-                    for h in p.hand:
-                        actions.append(action.DiscardFrom(h, p.hand))
-                    self.game.choice(actions, player=p)
+                p.discard_down_to(3)
     def on_escape(self, card):
         for c in self.game.escaped:
             if (c is not card) and (c.name == card.name):

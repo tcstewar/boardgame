@@ -52,10 +52,11 @@ class Player(object):
 
         del self.played[:]
 
-    def discard_from(self, card, location):
-        if card.return_from_discard and location is self.hand:
-            #TODO: make this an option
-            self.game.event('%s returned to hand' % card)
+    def discard_from(self, card, location, allow_return=True):
+        if (card.return_from_discard and location is self.hand
+            and allow_return):
+                #TODO: make this an option
+                self.game.event('%s returned to hand' % card)
         else:
             card.on_discard(self)
             self.discard.append(card)
@@ -261,5 +262,12 @@ class Player(object):
             if p is not self or self.game.solo_advanced:
                 yield p
 
+    def discard_down_to(self, count):
+        while len(self.hand) > count:
+            actions = []
+            for h in self.hand:
+                actions.append(action.DiscardFrom(h, self.hand,
+                                                  allow_return=False))
+            self.game.choice(actions, player=self)
 
 

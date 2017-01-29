@@ -224,17 +224,20 @@ class DiscardFrom(bg.Action):
         if self.show_cost:
             extra = extra + ' (cost:%d)' % self.card.cost
         return 'Discard %s%s' % (self.card, extra)
-    def __init__(self, card, location, player=None, show_cost=False):
+    def __init__(self, card, location, player=None, show_cost=False,
+                 allow_return=True):
         self.card = card
         self.show_cost = show_cost
         self.player = player
         self.location = location
+        self.allow_return = allow_return
     def valid(self, game, player):
         return self.card in self.location
     def perform(self, game, player):
         if self.player is not None:
             player = self.player
-        player.discard_from(self.card, self.location)
+        player.discard_from(self.card, self.location,
+                            allow_return=self.allow_return)
 
 class GainFrom(bg.Action):
     def __str__(self):

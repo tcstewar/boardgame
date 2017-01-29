@@ -436,7 +436,6 @@ class Legendary(bg.BoardGame):
         for h in self.handlers['on_choice']:
             h.update(self)
 
-
     def add_turn_handler(self, key, handler):
         self.turn_handlers[key].append(handler)
         handler.start(self)
