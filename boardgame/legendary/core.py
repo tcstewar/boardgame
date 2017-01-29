@@ -93,7 +93,7 @@ class Mastermind(bg.Card):
 
 
 class Scheme(bg.Card):
-    allow_solo = True
+    allow_solo_basic = True
     always_leads = None
     def __init__(self, game):
         super(Scheme, self).__init__(game)

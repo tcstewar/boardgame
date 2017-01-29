@@ -58,9 +58,10 @@ class Legendary(bg.BoardGame):
         self.event('Mastermind: %s' % self.mastermind.text())
 
         if scheme is None:
-            cls = self.rng.choice(ss.values())
-            while n_players == 1 and not cls.allow_solo:
-                cls = self.rng.choice(ss.values())
+            options = ss.values()
+            if n_players == 1 and basic:
+                options = [x for x in options if x.allow_solo_basic]
+            cls = self.rng.choice(options)
         else:
             if scheme in ss:
                 cls = ss[scheme]

@@ -104,6 +104,7 @@ class BankRobbery(Scheme):
 
 class NegativeZonePrisonBreakout(Scheme):
     name = 'Negative Zone Prison Breakout'
+    allow_solo_basic = False
     desc = ("Twist: Play 2 Villains. If 12 Villains escape, Evil Wins.")
     twists = 8
     def adjust_henchman_count(self, count):
@@ -119,11 +120,11 @@ class NegativeZonePrisonBreakout(Scheme):
 
 class CivilWar(Scheme):
     name = 'Super Hero Civil War'
-    allow_solo = False
+    allow_solo_basic = False
     desc = "Twist: KO all Heroes in HQ. If Hero pile runs out, Evil wins."
     def __init__(self, game):
         n_players = len(game.players)
-        if 2 <= n_players <= 3:
+        if 1 <= n_players <= 3:
             self.twists = 8
         elif 4 <= n_players <= 5:
             self.twists = 5
@@ -131,7 +132,7 @@ class CivilWar(Scheme):
             assert False
         super(CivilWar, self).__init__(game)
     def adjust_hero_count(self, count):
-        if len(self.game.players) == 2:
+        if len(self.game.players) <= 2:
             return 4
         else:
             return count
