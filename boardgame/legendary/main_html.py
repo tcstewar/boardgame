@@ -70,14 +70,15 @@ class Server(boardgame.swi.SimpleWebInterface):
         <ul>
           <li>Mastermind: %(mastermind)s
           <li>Scheme: %(scheme)s
-          <li>Scores: %(scores)s
-          <li>Mean score: %(mean_score)1.3f
+          <li>Results: %(mean_result)1.3f %(results)s
+          <li>Scores: %(mean_score)1.3f %(scores)s
         </ul>
 
         <a href="newgame?seed=%(seed)d">start game</a>
         '''
 
         scores = []
+        results = []
         for i in range(50):
             game = boardgame.legendary.Legendary(seed=seed,
                 n_players=n_players,
@@ -86,14 +87,15 @@ class Server(boardgame.swi.SimpleWebInterface):
                 villain=villain,
                 hero=hero
                 )
-            if i > 0:
-                rand = boardgame.testing.RandomPlay(seed=i)
-            else:
-                rand = boardgame.testing.FirstPlay()
+            random.shuffle(game.hero)
+            random.shuffle(game.villain)
+            rand = boardgame.testing.FirstPlay()
             game.run(rand.selector)
-            scores.append(game.result)
+            scores.append(sum(p.victory_points() for p in game.players))
+            results.append(game.result)
 
         mean_score = sum(scores) / float(len(scores))
+        mean_result = sum(results) / float(len(results))
 
 
         scheme = game.scheme.html()
