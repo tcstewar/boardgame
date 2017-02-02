@@ -1143,10 +1143,10 @@ class AngelStrengthOfSpirit(Hero):
                 break
             choice = self.game.choice(actions, player=player,
                                       allow_do_nothing=True)
-            original_hand.remove(choice.card)
             if choice is None:
                 break
             else:
+                original_hand.remove(choice.card)
                 count += 1
         player.draw(count)
 

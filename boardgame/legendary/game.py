@@ -12,6 +12,24 @@ from .player import Player
 
 from .core import *
 
+class ClassList(object):
+    mastermind = dict(inspect.getmembers(masterminds,
+        lambda x: inspect.isclass(x) and issubclass(x, Mastermind) and
+                   not x is Mastermind))
+    villain = dict(inspect.getmembers(villains,
+        lambda x: inspect.isclass(x) and issubclass(x, VillainGroup) and
+                   not x is VillainGroup))
+    henchman = dict(inspect.getmembers(villains,
+        lambda x: inspect.isclass(x) and issubclass(x, Henchman) and
+                   not x is Henchman))
+    hero = dict(inspect.getmembers(hero_module,
+        lambda x: inspect.isclass(x) and issubclass(x, HeroGroup) and
+                   not x is HeroGroup))
+    scheme = dict(inspect.getmembers(schemes,
+        lambda x: inspect.isclass(x) and issubclass(x, Scheme) and
+                   not x is Scheme))
+
+
 class Legendary(bg.BoardGame):
     def reset(self, seed=None, n_players=2, mastermind=None, villain=None,
                                             hero=None, scheme=None,
@@ -35,21 +53,12 @@ class Legendary(bg.BoardGame):
         self.handlers = {}
         self.handlers['on_choice'] = []
 
-        ms = dict(inspect.getmembers(masterminds,
-            lambda x: inspect.isclass(x) and issubclass(x, Mastermind) and
-                       not x is Mastermind))
-        vs = dict(inspect.getmembers(villains,
-            lambda x: inspect.isclass(x) and issubclass(x, VillainGroup) and
-                       not x is VillainGroup))
-        vhs = dict(inspect.getmembers(villains,
-            lambda x: inspect.isclass(x) and issubclass(x, Henchman) and
-                       not x is Henchman))
-        hs = dict(inspect.getmembers(hero_module,
-            lambda x: inspect.isclass(x) and issubclass(x, HeroGroup) and
-                       not x is HeroGroup))
-        ss = dict(inspect.getmembers(schemes,
-            lambda x: inspect.isclass(x) and issubclass(x, Scheme) and
-                       not x is Scheme))
+        ms = dict(ClassList.mastermind)
+        vs = dict(ClassList.villain)
+        vhs = dict(ClassList.henchman)
+        hs = dict(ClassList.hero)
+        ss = dict(ClassList.scheme)
+
 
         if mastermind is not None:
             self.mastermind = ms[mastermind](self)
@@ -420,12 +429,15 @@ class Legendary(bg.BoardGame):
 
     def evil_wins(self):
         self.event('Evil Wins!')
+        self.result = -1
         raise bg.FinishedException()
     def good_wins(self):
         self.event('Good Wins!')
+        self.result = 1
         raise bg.FinishedException()
     def tie_game(self):
         self.event('Tie game!')
+        self.result = 0
         raise bg.FinishedException()
 
     def choice(self, actions, **kwargs):
