@@ -619,7 +619,7 @@ class Pestilence(Villain):
             self.punish(p)
     def punish(self, p):
         cards = p.reveal(3)
-        for c in cards:
+        for c in cards[:]:
             if c.cost > 0:
                 p.discard_from(c, cards)
         while len(cards) > 0:

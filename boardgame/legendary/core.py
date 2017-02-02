@@ -78,12 +78,15 @@ class Tactic(bg.Card):
 
 class Mastermind(bg.Card):
     bribe = False
+    force_always_leads = False
     def __init__(self, game):
         super(Mastermind, self).__init__(game)
         self.captured = []
     def capture(self, card):
         self.captured.append(card)
         self.game.scheme.on_capture(self, card)
+    def on_escape(self, card):
+        pass
     def text(self):
         return '%s [P%d] %s' % (self.name, self.power, self.desc)
     def html(self):
@@ -261,9 +264,13 @@ class AdjustPower(Adjust):
     def __init__(self, items, amount):
         super(AdjustPower, self).__init__(items)
         self.amount = amount
+        self.wasted = 0
 
     def apply(self, item):
         item.power += self.amount
+        if item.power < 0:
+            self.wasted = -item.power
+            item.power = 0
 
     def remove(self, item):
-        item.power -= self.amount
+        item.power -= self.amount + self.wasted

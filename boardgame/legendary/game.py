@@ -119,7 +119,8 @@ class Legendary(bg.BoardGame):
             n_hg = 0
 
         for i in range(n_vg):
-            if self.mastermind.always_leads in vs.values() and not solo:
+            if (self.mastermind.always_leads in vs.values() and
+                    (not solo or self.mastermind.force_always_leads)):
                 cls = self.mastermind.always_leads
             elif self.scheme.always_leads in vs.values():
                 cls = self.scheme.always_leads
@@ -242,6 +243,7 @@ class Legendary(bg.BoardGame):
                 self.on_escape(self.city[0])
                 self.city[0].on_escape()
                 self.scheme.on_escape(self.city[0])
+                self.mastermind.on_escape(self.city[0])
                 self.city[0] = None
                 index = 0
         for i in range(index, 4):

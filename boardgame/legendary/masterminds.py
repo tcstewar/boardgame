@@ -296,7 +296,7 @@ class MagnetoTactic4(Tactic):
 
 class Kingpin(Mastermind):
     name = 'Kingpin'
-    desc = ('Master Strike: Each player reveals <MKn> or '
+    desc = ('Bribe. Master Strike: Each player reveals <MKn> or '
             'discards hand and draws 5')
 
     always_leads = villains.StreetsOfNewYork
@@ -392,3 +392,102 @@ class KingpinTactic4(Tactic):
     def mob_war(self, card, player):
         player.victory_pile.remove(card)
         self.game.play_villain(card)
+
+class Apocalypse(Mastermind):
+    name = 'Apocalypse'
+    desc = ('Master Strike: Each player puts all C>1 Heros in hand on top of '
+            'deck.  Evil Wins if Famine, Pestilence, War, and Death escape.')
+
+    always_leads = villains.FourHorsemen
+    force_always_leads = True
+    power = 12
+
+    horsemen = (villains.Death, villains.War,
+                villains.Pestilence, villains.Famine)
+
+    def __init__(self, game):
+        super(Apocalypse, self).__init__(game)
+        self.tactics = [ApocalypseTactic1(game), ApocalypseTactic2(game),
+                        ApocalypseTactic3(game), ApocalypseTactic4(game)]
+        self.game.rng.shuffle(self.tactics)
+
+    def strike(self):
+        for p in self.game.players:
+            for c in p.hand[:]:
+                if isinstance(c, Hero) and c.cost > 1:
+                    p.hand.remove(c)
+                    p.return_to_stack(c)
+
+    def on_escape(self, card):
+        for v in Apocalypse.horsemen:
+            for c in self.game.escaped:
+                if isinstance(c, v):
+                    break
+            else:
+                return
+        self.game.evil_wins()
+
+
+class ApocalypseTactic1(Tactic):
+    name = "Horsemen Are Drawing Nearer"
+    desc = "Each other player plays a Four Horsemen from their Victory Pile."
+    victory = 6
+    def on_fight(self, player):
+        for p in player.other_players():
+            actions = []
+            for c in p.victory_pile:
+                if isinstance(c, Apocalypse.horsemen):
+                    actions.append(bg.CustomAction('Play %s' % c,
+                                                   self.draw_near,
+                                                   args=(p,c)))
+            if len(actions) > 0:
+                self.game.choice(actions, player=p)
+
+    def draw_near(self, player, card):
+        player.victory_pile.remove(card)
+        self.game.play_villain(card)
+
+
+class ApocalypseTactic2(Tactic):
+    name = "Immortal and Undefeated"
+    desc = ("If not last tactic, rescue 6 Bystanders and shuffle this "
+            "back into the tactics deck.")
+
+    victory = 6
+    def on_fight(self, player):
+        if len(self.game.mastermind.tactics) > 0:
+            for i in range(6):
+                player.rescue_bystander()
+            self.game.mastermind.tactics.append(self)
+            self.game.rng.shuffle(self.game.mastermind.tactics)
+
+class ApocalypseTactic3(Tactic):
+    name = "The End of All Things"
+    desc = ("Each other player reveals top 3 cards of deck, KOs C>=1, puts"
+            " rest back in any order")
+    victory = 6
+    def on_fight(self, player):
+        for p in player.other_players():
+            cards = p.reveal(3)
+            for c in cards[:]:
+                if c.cost >= 1:
+                    action.KOFrom(c, cards).perform(self.game, player)
+            while len(cards) > 0:
+                actions = []
+                for c in cards:
+                    actions.append(action.ReturnFrom(c, cards))
+                self.game.choice(actions)
+
+class ApocalypseTactic4(Tactic):
+    name = "Apocalyptic Destruction"
+    desc = ("Each other player KOs 2 Heros from discard that cost 1 or more")
+    victory = 6
+    def on_fight(self, player):
+        for p in player.other_players():
+            for i in range(2):
+                actions = []
+                for c in p.discard:
+                    if isinstance(c, Hero) and c.cost >=1:
+                        actions.append(action.KOFrom(c, p.discard))
+                if len(actions) > 0:
+                    self.game.choice(actions)
