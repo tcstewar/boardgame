@@ -1,6 +1,7 @@
 import json
 import threading
 import time
+import random
 
 import boardgame as bg
 
@@ -48,13 +49,68 @@ class GameRunner(threading.Thread):
 
 import boardgame.swi
 import boardgame.legendary
+import boardgame.testing
+from boardgame.legendary.game import ClassList
 class Server(boardgame.swi.SimpleWebInterface):
     games = {}
     def swi(self):
-        return '<a href="newgame">Start new game</a>'
+        return '''<ul><li><a href="newgame">Start new game</a>
+                      <li><a href="configure">Configure a game</a></ul>'''
+
+    def swi_configure(self, seed=None, n_players=1, scheme=None,
+                          mastermind=None, villain=None, hero=None):
+        if seed is None:
+            seed = random.randrange(0x7FFFFFFF)
+        else:
+            seed = int(seed)
+        n_players = int(n_players)
+
+        text = '''
+        <a href="configure?seed=%(next_seed)d">randomize</a>
+        <ul>
+          <li>Mastermind: %(mastermind)s
+          <li>Scheme: %(scheme)s
+          <li>Scores: %(scores)s
+          <li>Mean score: %(mean_score)1.3f
+        </ul>
+
+        <a href="newgame?seed=%(seed)d">start game</a>
+        '''
+
+        scores = []
+        for i in range(50):
+            game = boardgame.legendary.Legendary(seed=seed,
+                n_players=n_players,
+                scheme=scheme,
+                mastermind=mastermind,
+                villain=villain,
+                hero=hero
+                )
+            if i > 0:
+                rand = boardgame.testing.RandomPlay(seed=i)
+            else:
+                rand = boardgame.testing.FirstPlay()
+            game.run(rand.selector)
+            scores.append(game.result)
+
+        mean_score = sum(scores) / float(len(scores))
+
+
+        scheme = game.scheme.html()
+        mastermind = game.mastermind.html()
+        next_seed = random.randrange(0x7FFFFFFF)
+
+        return text % locals()
+
+
+
+
 
     def swi_newgame(self, seed=None, n_players=1, scheme=None,
                           mastermind=None, villain=None, hero=None):
+        if seed is not None:
+            seed = int(seed)
+        n_players = int(n_players)
         game = boardgame.legendary.Legendary(
                 seed=seed,
                 n_players=n_players,
