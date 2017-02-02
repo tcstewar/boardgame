@@ -585,6 +585,9 @@ class Death(Villain):
         for c in p.hand:
             if c.cost >= 1:
                 actions.append(action.KOFrom(c, p.hand))
+        for c in p.played:
+            if c.cost >= 1:
+                actions.append(action.KOFrom(c, p.played))
         if len(actions) > 0:
             self.game.choice(actions)
 
