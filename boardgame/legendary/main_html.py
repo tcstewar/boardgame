@@ -53,10 +53,15 @@ class Server(boardgame.swi.SimpleWebInterface):
     def swi(self):
         return '<a href="newgame">Start new game</a>'
 
-    def swi_newgame(self, seed=None, n_players=1):
+    def swi_newgame(self, seed=None, n_players=1, scheme=None,
+                          mastermind=None, villain=None, hero=None):
         game = boardgame.legendary.Legendary(
                 seed=seed,
                 n_players=n_players,
+                scheme=scheme,
+                mastermind=mastermind,
+                villain=villain,
+                hero=hero
                 )
         runner = GameRunner(game)
         runner.start()
